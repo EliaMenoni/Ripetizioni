@@ -11,13 +11,6 @@ void array(int numeri[], int N) {
   }
 }
 
-// Scambia gli elementi di indice i e j nell'array
-void gira(int array[], int i, int j) {
-  int swap = array[i];
-  array[i] = array[j];
-  array[j] = swap;
-}
-
 bool ricercaSec(int array[], int dim, int val) {
   for (int i = 0; i < dim; i++) {
     if (array[i] == val)
