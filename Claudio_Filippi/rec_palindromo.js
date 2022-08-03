@@ -6,6 +6,7 @@ function rec_pal(word) {
     return word[0] == word[len - 1] && rec_pal(word.slice(1, -1));
 }
 
+
 function test(func, data) {
     data.forEach(element => {
         console.log(element + " ==> " + func(element));        

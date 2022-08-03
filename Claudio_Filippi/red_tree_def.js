@@ -1,3 +1,5 @@
+
+
 function tree_def(depth, figli, root = []) {
     if (depth == 1) return root["Val"] = Math.floor(Math.random() * 10);
 
