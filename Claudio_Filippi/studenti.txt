@@ -1,0 +1,3 @@
+Claudio,Filippi,Pisa,100
+Marco,Rossi,Pisa,100
+Andrea,Rossi,Milano,77
