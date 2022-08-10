@@ -2,7 +2,7 @@ let file = require("fs");
 
 function leggiStudenti(file) {
     var B = [];
-    let A = readFileSync("studenti.txt");
+    let A = file.readFileSync("studenti.txt");
     // A.split("\n");
     A.split("\n").forEach(element => {
         B.push(new Studenti(element.split(",")[0], element.split(",")[1], element.split(",")[2], element.split(",")[3]));
