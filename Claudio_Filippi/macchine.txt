@@ -1,0 +1,11 @@
+CODICE  TARGA   MARCA   MODELLO PORTE   KM      CILINDRATA  CATEGORIA   
+1       AX765GD BMW     X5      5       100000  50          Disel
+2       BG876FI AUDI    A4      5       0       70          Benzina
+3       YU467AZ PEUGEOT 3008    4       18768   50          -Disel
+4       Bo0mer  TESLA   MODEL 3 5       100     50          Elettrica
+5       111111  Franco  Bello   5       100500  35          Aria Fritta
+6       7777777 Franco2 Brutta  1       1040    12          Molto Brutta
+7       AA45BB  BMW     X4      5       1235    70          Benzina
+8       BC75FS  FIAT    PANDA   7       9879    100         Metano
+9       AP01TT  FERRARI 1       4       0       150         Benzina
+10      NNNNNN  FERRARI 7       4       0       150         Metano
