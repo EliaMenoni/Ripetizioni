@@ -46,6 +46,7 @@ int find(struct Node *tree, int val) {
       }
     }
   }
+  return 0;
 }
 
 void insert(struct Node **tree, int val) {
@@ -89,7 +90,7 @@ void dataManage(struct Node** tree){
     insert(tree, toInsert);
   }
   printAscending(*tree);
-  printf("\n");
+  if(tree != NULL) printf("\n");
   int toCheck;
   scanf("%d", &toCheck);
   printf(find(*tree, toCheck) ? "True\n" : "False\n");

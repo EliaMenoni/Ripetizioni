@@ -1,3 +1,24 @@
+// Implementare, utilizzando le liste concatenate, la struttura dati Coda
+// (FIFO). Devono essere implementate delle funzioni che permettono le seguente
+// operazioni:
+
+// -push - inserisce un elemento nella coda
+// -pop - rimuove il primo elemento dalla coda
+// -peek - restituisce il valore del primo elemento della coda senza rimuoverlo
+// -length - calcola la lunghezza della coda in modo ricorsivo
+// -print - stampa gli elementi della coda, iniziando con il primo elemento
+// (vedi esempio) in modo ricorsivo
+
+// Scrivere una funzione main che legge da standard input una serie di interi e,
+// utilizzando le funzioni definite, esegue le seguenti operazioni:
+
+// -Se il numero è dispari viene inserito nella coda
+// -Se il numero è pari diverso da 0, viene inserito il numero diviso per 2
+// -Se il numero è 0, viene eliminato un elemento dalla coda, solo se l'elemento
+// è pari o la lista contiene più di 4 elementi. -Il programma si ferma quando
+// si leggono due 0 di seguito. Viene stampato il contenuto della coda e la
+// lunghezza
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -31,16 +52,22 @@ int length(struct Nodo *coda) {
   return length;
 }
 
-void print(struct Nodo *coda) {
-  printf("Lista di %d element\n", length(coda));
-  if(coda == NULL) return;
+// void print(struct Nodo *coda) {
+//   printf("Lista di %d element\n", length(coda));
+//   if (coda == NULL) return;
 
-  while (coda->next != NULL) {
-    printf("%d -> ", coda->numero);
-    coda = coda->next;
-  }
-  printf("NULL\n");
+//   while (coda->next != NULL) {
+//     printf("%d\n", coda->numero);
+//     coda = coda->next;
+//   }
+// }
+
+void print(struct Nodo* coda){
+  if (coda == NULL) return;
+  printf("%d\n", coda->numero);
+  print(coda->next);
 }
+
 
 int peek(struct Nodo *coda) {
   if (coda == NULL) return 0;
@@ -61,6 +88,10 @@ int main() {
   int contaZeri = 0;
   do {
     scanf("%d", &val);
+    if (val == 0 && contaZeri == 1)
+      break;
+    else
+      contaZeri = 0;
     if (val % 2 == 1)
       push(&coda, val);
     else {
@@ -72,10 +103,9 @@ int main() {
         }
       }
     }
-    if(val == 0 && contaZeri == 1) break;
-    else contaZeri = 0;
   } while (1);
+  printf("Lista di %d elementi\n", length(coda));
   print(coda);
-  length(coda);
+  printf("%d\n", length(coda));
   return 0;
 }
