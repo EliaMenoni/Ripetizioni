@@ -18,15 +18,16 @@
 
 int readInt() {
   int val;
-  while (scanf("%d", &val) != 1 && val <= 0) {
+  while (scanf("%d", &val) == 0) {
     printf("Errore in input, inserisci un intero valido\n");
+    scanf("%*[^\n]\n");
   }
   return val;
 }
 
 void populate(int arr[], int dim){
     for (unsigned int i = 0; i < dim; i++)
-    scanf("%d", &arr[i]);
+    arr[i] = readInt();
 }
 
 int *calculate(int arr[], int dim, int* newDim){

@@ -19,6 +19,7 @@
 // si leggono due 0 di seguito. Viene stampato il contenuto della coda e la
 // lunghezza
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -29,7 +30,8 @@ typedef struct Nodo {
 
 void push(struct Nodo **ptr, int val) {
   struct Nodo *ins = malloc(sizeof(struct Nodo));
-  if (ins == NULL) exit(1);  // --> Memoria finita
+  if (ins == NULL)
+    exit(1); // --> Memoria finita
   ins->numero = val;
   ins->next = NULL;
 
@@ -39,12 +41,15 @@ void push(struct Nodo **ptr, int val) {
   }
 
   struct Nodo *tmp = *ptr;
-  while (tmp->next != NULL) tmp = tmp->next;
+  while (tmp->next != NULL)
+    tmp = tmp->next;
   tmp->next = ins;
 }
 
 int length(struct Nodo *coda) {
-  int length = 0;
+  if (coda == NULL)
+    return 0;
+  int length = 1;
   while (coda->next != NULL) {
     length++;
     coda = coda->next;
@@ -62,20 +67,22 @@ int length(struct Nodo *coda) {
 //   }
 // }
 
-void print(struct Nodo* coda){
-  if (coda == NULL) return;
+void print(struct Nodo *coda) {
+  if (coda == NULL)
+    return;
   printf("%d\n", coda->numero);
   print(coda->next);
 }
 
-
 int peek(struct Nodo *coda) {
-  if (coda == NULL) return 0;
+  if (coda == NULL)
+    return 0;
   return coda->numero;
 }
 
 void pop(struct Nodo **coda) {
-  if (*coda == NULL) return;
+  if (*coda == NULL)
+    return;
 
   struct Nodo *x = *coda;
   *coda = x->next;
@@ -88,24 +95,23 @@ int main() {
   int contaZeri = 0;
   do {
     scanf("%d", &val);
-    if (val == 0 && contaZeri == 1)
-      break;
-    else
-      contaZeri = 0;
-    if (val % 2 == 1)
+    if (abs(val) % 2 == 1)
       push(&coda, val);
     else {
-      if (val != 0) push(&coda, val / 2);
+      if (val != 0)
+        push(&coda, val / 2);
       if (val == 0) {
         if (peek(coda) % 2 == 0 || length(coda) > 4) {
           pop(&coda);
-          contaZeri++;
         }
       }
     }
+    if (val == 0 && contaZeri == 1)
+      break;
+    else
+      contaZeri = val == 0 ? contaZeri + 1 : 0;
   } while (1);
   printf("Lista di %d elementi\n", length(coda));
   print(coda);
-  printf("%d\n", length(coda));
   return 0;
 }
