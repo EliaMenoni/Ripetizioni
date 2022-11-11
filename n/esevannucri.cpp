@@ -11,8 +11,13 @@ int main(void){
     file >> DIM;
 
     float temerature[DIM];
-    
+    float tmp;
+    for(int i = 0; i < DIM; i++){
+        file >> tmp;
+        temperature[i] = tmp;
+    }
     //Chiudo il file
+    file.close();
     //Faccio i miei conti
     //Scrivo il file
     //Chiudo il file
