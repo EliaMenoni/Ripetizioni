@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "unboundedqueue.h": "c",
+        "stdio.h": "c"
+    }
+}

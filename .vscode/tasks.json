@@ -1,0 +1,32 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc compila il file attivo",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/lib/libro/libro.c",
+                "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/lib/unboundedqueue/unboundedqueue.c",
+                "-o",
+                "${fileDirname}/../bin/${fileBasenameNoExtension}.out",
+                "-lpthread",
+                "-lm"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Attività generata dal debugger."
+        }
+    ],
+    "version": "2.0.0"
+}
