@@ -31,6 +31,6 @@ Nodo *riempi_catalogo(char *file);
 
 void copia(Libro *destinazione, Libro *sorgente);
 
-Nodo *ricerca_libri(Nodo *cursore, Libro *filtri);
+Nodo *ricerca_libri(Nodo *libreria, Libro *filtri);
 
 #endif

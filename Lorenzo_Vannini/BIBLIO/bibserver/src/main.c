@@ -6,10 +6,22 @@
 #include "../lib/libro/libro.h"
 #include "../lib/unboundedqueue/unboundedqueue.h"
 
+struct Request {
+  Nodo* radice_libreria;
+  int noleggio;
+  Libro* filtro;
+};
+
+typedef struct Request Request;
+
 pthread_mutex_t buffer_mutex;
 
 void* worker(void* arg){
   printf("testing\n");
+  Queue_t* coda = (Queue_t*)arg;
+
+  Request* richiesta = (Request*)pop(coda);
+  Nodo* libreria = richiesta -> radice_libreria;
 }
 
 int main(void) {

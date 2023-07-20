@@ -119,17 +119,15 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
         valido = valido & 0;
     }
 
-    if (strcmp(filtri->titolo, "") !=
-        0) {  // guarda se esistono sottostringhe della seconda parola
-              // all'interno della prima
+    if (strcmp(filtri->titolo, "") != 0) {  // guarda se esistono sottostringhe della seconda parola
+                                            // all'interno della prima
       if (strstr(cursore->libro->titolo, filtri->titolo))
         valido = valido & 1;
       else
         valido = valido & 0;
     }
 
-    if (strcmp(filtri->editore, "") !=
-        0) {  // guarda se esistono sottostringhe della seconda parola
+    if (strcmp(filtri->editore, "") != 0) {  // guarda se esistono sottostringhe della seconda parola
               // all'interno della prima
       if (strstr(cursore->libro->editore, filtri->editore))
         valido = valido & 1;
