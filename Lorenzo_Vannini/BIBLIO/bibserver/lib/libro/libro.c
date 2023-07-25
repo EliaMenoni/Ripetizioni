@@ -220,7 +220,7 @@ int noleggia(Libro* libro){
       return 0;
   }
   else {
-  Libro *prestito = malloc(sizeof(char)*11);
+  libro -> prestito = malloc(sizeof(char)*11);
   strcpy(libro -> prestito, "oggi");
   UnlockLibraryAndSignal(libro);
   return 1;

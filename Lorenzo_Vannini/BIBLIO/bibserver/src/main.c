@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <assert.h>
 #include <errno.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../lib/libro/libro.h"
 #include "../lib/unboundedqueue/unboundedqueue.h"
@@ -19,29 +19,30 @@ typedef struct Request Request;
 
 pthread_mutex_t buffer_mutex;
 
-void* worker(void* arg){
-  printf("testing\n");
+void* worker(void* arg) {
   Queue_t* coda = (Queue_t*)arg;
 
   Request* richiesta = (Request*)pop(coda);
-  Nodo* libreria = richiesta -> radice_libreria;
-  Nodo *risultato = ricerca_libri(libreria, richiesta -> filtro);
-  
-  if(richiesta -> noleggio == 1){
+  Nodo* libreria = richiesta->radice_libreria;
+  Nodo* risultato = ricerca_libri(libreria, richiesta->filtro);
+
+  if (richiesta->noleggio == 1) {
     Nodo* cursore = risultato;
-    while(cursore != NULL){
-      if(noleggia(cursore -> libro))
-        printf("Noleggiato libro %s\n", cursore -> libro -> titolo);
+    while (cursore != NULL) {
+      if (noleggia(cursore->libro))
+        printf("Noleggiato libro %s\n", cursore->libro->titolo);
       else
-        printf("Non noleggiato libro %s\n", cursore -> libro -> titolo);
+        printf("Non noleggiato libro %s\n", cursore->libro->titolo);
+
+      cursore = cursore->next;
     }
   }
   stampa_libreria(risultato);
 }
 
 int main(void) {
-  Nodo* testa_lista; //puntatore alla radice della lista
-  
+  Nodo* testa_lista;  // puntatore alla radice della lista
+
   testa_lista = riempi_catalogo("../data/biblioteca_1.txt");
 
   if (pthread_mutex_init(&buffer_mutex, NULL) != 0) {
@@ -51,12 +52,12 @@ int main(void) {
 
   int num_workers = 5;
   if (num_workers <= 0) return 0;
-  pthread_t *workers = malloc(sizeof(pthread_t) * num_workers);
+  pthread_t* workers = malloc(sizeof(pthread_t) * num_workers);
 
   // crea il buffer
-  Queue_t *buffer = initQueue();
+  Queue_t* buffer = initQueue();
 
-  Request* richiesta = (Request *)malloc(sizeof(Request));
+  Request* richiesta = (Request*)malloc(sizeof(Request));
   Libro filtro;
   strcpy(filtro.autore[0], "");
   strcpy(filtro.titolo, "arte della");
@@ -65,15 +66,14 @@ int main(void) {
   strcpy(filtro.collocazione, "");
   strcpy(filtro.descrizione_fisica, "");
   filtro.prestito = NULL;
-  richiesta -> filtro = &filtro;
-  richiesta -> noleggio = 0;
-  richiesta -> radice_libreria = testa_lista;
+  richiesta->filtro = &filtro;
+  richiesta->noleggio = 1;
+  richiesta->radice_libreria = testa_lista;
   push(buffer, (void*)richiesta);
   push(buffer, (void*)richiesta);
   push(buffer, (void*)richiesta);
   push(buffer, (void*)richiesta);
   push(buffer, (void*)richiesta);
-
 
   // avvia m worker
   for (int i = 0; i < num_workers; i++) {
