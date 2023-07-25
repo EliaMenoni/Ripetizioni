@@ -1,8 +1,17 @@
 #include "libro.h"
+#include "../unboundedqueue/util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+#include <errno.h>
+#include <pthread.h>
+
+static inline void LockLibrary(Libro *q)            { LOCK(&q->qlock);   }
+static inline void UnlockLibrary(Libro *q)          { UNLOCK(&q->qlock); }
+static inline void UnlockLibraryAndWait(Libro *q)   { WAIT(&q->qcond, &q->qlock); }
+static inline void UnlockLibraryAndSignal(Libro *q) { SIGNAL(&q->qcond); UNLOCK(&q->qlock); }
 
 void stampa(Libro *libro) {
   for (int j = 0; j < libro->numero_autori; j++)
@@ -20,6 +29,27 @@ void stampa(Libro *libro) {
     printf("prestito:\n");
 
   printf("\n");
+}
+
+void stampa_libreria(Nodo *libreria) {
+  while(libreria != NULL){
+  for (int j = 0; j < libreria->libro->numero_autori; j++)
+    printf("autore: %s\n", libreria->libro->autore[j]);
+  printf("titolo: %s\n", libreria->libro->titolo);
+  printf("editore: %s\n", libreria->libro->editore);
+  printf("anno: %d\n", libreria->libro->anno);
+  printf("nota: %s\n", libreria->libro->nota);
+  printf("collocazione: %s\n", libreria->libro->collocazione);
+  printf("luogo_pubblicazione: %s\n", libreria->libro->luogo_pubblicazione);
+  printf("descrizione_fisica: %s\n", libreria->libro->descrizione_fisica);
+  if (libreria->libro->prestito != NULL)
+    printf("prestito: %s\n", libreria->libro->prestito);
+  else
+    printf("prestito:\n");
+
+  printf("\n");
+  libreria = libreria->next;
+  }
 }
 
 Libro *crea_libro(char *riga) {
@@ -173,12 +203,26 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
         nodo_invia = nodo_invia->next;
       }
 
-      Libro *tmp = (Libro *)malloc(sizeof(Libro));
-      copia(tmp, cursore->libro);
-      nodo_invia->libro = tmp;
+      //Libro *tmp = (Libro *)malloc(sizeof(Libro));
+      //copia(tmp, cursore->libro);
+      nodo_invia->libro = cursore -> libro;
       nodo_invia->next = NULL;
     }
     cursore = cursore->next;
   }
   return invia;
+}
+
+int noleggia(Libro* libro){
+  LockLibrary(libro);
+  if(libro -> prestito != NULL) {
+    UnlockLibraryAndSignal(libro);
+      return 0;
+  }
+  else {
+  Libro *prestito = malloc(sizeof(char)*11);
+  strcpy(libro -> prestito, "oggi");
+  UnlockLibraryAndSignal(libro);
+  return 1;
+  }
 }

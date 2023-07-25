@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <assert.h>
+#include <errno.h>
+#include <string.h>
 
 #include "../lib/libro/libro.h"
 #include "../lib/unboundedqueue/unboundedqueue.h"
@@ -22,6 +25,18 @@ void* worker(void* arg){
 
   Request* richiesta = (Request*)pop(coda);
   Nodo* libreria = richiesta -> radice_libreria;
+  Nodo *risultato = ricerca_libri(libreria, richiesta -> filtro);
+  
+  if(richiesta -> noleggio == 1){
+    Nodo* cursore = risultato;
+    while(cursore != NULL){
+      if(noleggia(cursore -> libro))
+        printf("Noleggiato libro %s\n", cursore -> libro -> titolo);
+      else
+        printf("Non noleggiato libro %s\n", cursore -> libro -> titolo);
+    }
+  }
+  stampa_libreria(risultato);
 }
 
 int main(void) {
@@ -40,6 +55,25 @@ int main(void) {
 
   // crea il buffer
   Queue_t *buffer = initQueue();
+
+  Request* richiesta = (Request *)malloc(sizeof(Request));
+  Libro filtro;
+  strcpy(filtro.autore[0], "");
+  strcpy(filtro.titolo, "arte della");
+  strcpy(filtro.editore, "");
+  filtro.anno = -1;
+  strcpy(filtro.collocazione, "");
+  strcpy(filtro.descrizione_fisica, "");
+  filtro.prestito = NULL;
+  richiesta -> filtro = &filtro;
+  richiesta -> noleggio = 0;
+  richiesta -> radice_libreria = testa_lista;
+  push(buffer, (void*)richiesta);
+  push(buffer, (void*)richiesta);
+  push(buffer, (void*)richiesta);
+  push(buffer, (void*)richiesta);
+  push(buffer, (void*)richiesta);
+
 
   // avvia m worker
   for (int i = 0; i < num_workers; i++) {
