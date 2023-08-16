@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 #include "../lib/libro/libro.h"
 #include "../lib/unboundedqueue/unboundedqueue.h"
@@ -20,6 +22,8 @@ typedef struct Request Request;
 pthread_mutex_t buffer_mutex;
 
 void* worker(void* arg) {
+  pid_t tid = syscall(SYS_gettid);    //prende l'id del sottoprocesso corrente
+  char* out_buffer = malloc(250);     //il buffer in cui mettiamo la stringa formattata da stampare nel log
   Queue_t* coda = (Queue_t*)arg;
 
   Request* richiesta = (Request*)pop(coda);
@@ -27,7 +31,10 @@ void* worker(void* arg) {
   Nodo* risultato = ricerca_libri(libreria, richiesta->filtro);
 
   if (richiesta->noleggio == 1) {
+    sprintf(out_buffer, "%d - servo richiesta noleggio", tid);   //fa il lavoro della printf ma anzichè stamparla la mette in un buffer
+    write_log(out_buffer);
     Nodo* cursore = risultato;
+    aggiorna_scadenza(libreria);
     while (cursore != NULL) {
       if (noleggia(cursore->libro))
         printf("Noleggiato libro %s\n", cursore->libro->titolo);
@@ -38,6 +45,7 @@ void* worker(void* arg) {
     }
   }
   stampa_libreria(risultato);
+  generate_log(risultato);
 }
 
 int main(void) {
@@ -74,6 +82,7 @@ int main(void) {
   push(buffer, (void*)richiesta);
   push(buffer, (void*)richiesta);
   push(buffer, (void*)richiesta);
+  write_log("Server avviato");
 
   // avvia m worker
   for (int i = 0; i < num_workers; i++) {

@@ -7,6 +7,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 static inline void LockLibrary(Libro *q)            { LOCK(&q->qlock);   }
 static inline void UnlockLibrary(Libro *q)          { UNLOCK(&q->qlock); }
@@ -213,16 +216,76 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
   return invia;
 }
 
+void aggiorna_scadenza(Nodo *libreria){
+  time_t now = time(NULL);
+  struct tm* today;
+  today = localtime(&now);
+
+  while(libreria != NULL){
+    LockLibrary(libreria->libro);
+    if(libreria->libro->prestito != NULL){
+      struct tm data;
+      strptime(libreria->libro->prestito, "%d/%m/%Y", &data);
+
+      // Confronta le date
+      if(data.tm_year < today->tm_year ||
+        (data.tm_year == today->tm_year && data.tm_mon < today->tm_mon) ||
+        (data.tm_year == today->tm_year && data.tm_mon == today->tm_mon && data.tm_mday < today->tm_mday)) {
+        free(libreria->libro->prestito); // La data fornita è precedente a quella attuale
+        libreria->libro->prestito = NULL;
+      }
+    }
+    UnlockLibraryAndSignal(libreria->libro);
+    libreria = libreria->next;
+  }
+}
+
 int noleggia(Libro* libro){
   LockLibrary(libro);
   if(libro -> prestito != NULL) {
     UnlockLibraryAndSignal(libro);
-      return 0;
+    return 0;
   }
   else {
-  libro -> prestito = malloc(sizeof(char)*11);
-  strcpy(libro -> prestito, "oggi");
-  UnlockLibraryAndSignal(libro);
-  return 1;
+    time_t now;
+    struct tm* today;
+    now = time(NULL);
+    today = localtime(&now);
+    libro -> prestito = malloc(sizeof(char)*11);
+    snprintf(libro->prestito, 11, "%02d/%02d/%04d", today->tm_mday, today->tm_mon + 2, today->tm_year + 1900); //+1 di base e +1 per scadenza del mese di prestito
+    UnlockLibraryAndSignal(libro);
+    return 1;
+    }
   }
+
+  void write_log(char* text){               //apre un file e scrive una stringa data da noi, dobbiamo sfruttare lock e unlock perchè non possiamo accedere a un file con più thread contemporaneamente
+    static pthread_mutex_t qlock;           //per rendere il semaforo disponibile a tutti i thread, anzichè passarlo come argomento, lo abbiamo reso statico
+    static pthread_cond_t  qcond;           //viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
+    LOCK(&qlock);
+
+    FILE* log;
+    log = fopen("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/requests.log", "a+"); //apro il file con "a+" perchè permette di aprire il file in scrittura senza cancellare il contenuto e posizionandosi alla fine.
+    if(log == NULL)                                                                                  //mentre con "w" il contenuto veniva cancellato ogni volta, stampando solo l'ultima esecuzione
+      exit(1);
+    fprintf(log, text);                     //scrivo nel file di log il testo dato da noi e mando a capo, poi chiudo il file
+    fprintf(log, "\n");
+    fclose(log);
+    UNLOCK(&qlock);                         //sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
+    SIGNAL(&qcond);
+  }
+
+  void generate_log(Nodo* risultato){
+    if(risultato == NULL)
+      return;
+
+    int n_libri = 0;
+    Nodo* iteratore = risultato;
+    while(iteratore != NULL){
+      n_libri++;
+      iteratore = iteratore->next;
+    }
+
+    char buffer[100];
+    sprintf(buffer, "%d - Numero di libri presenti: %d", syscall(SYS_gettid), n_libri);
+    write_log(buffer);
 }

@@ -45,4 +45,10 @@ Nodo *ricerca_libri(Nodo *libreria, Libro *filtri);
 
 int noleggia(Libro* libro);
 
+void aggiorna_scadenza(Nodo* libreria);
+
+void write_log(char* text);
+
+void generate_log(Nodo* risultato);
+
 #endif
