@@ -31,24 +31,24 @@ static inline void UnlockLibrary(Libro *q);
 static inline void UnlockLibraryAndWait(Libro *q);
 static inline void UnlockLibraryAndSignal(Libro *q);
 
-void stampa(Libro *libro);
+void stampa_libro(Libro *libro);
 
 void stampa_libreria(Nodo *libreria);
 
-Libro *crea_libro(char *riga);
+Libro *crea_libro_da_stringa(char *riga);
 
-Nodo *riempi_catalogo(char *file);
+Nodo *crea_catalogo_da_file(char *file);
 
-void copia(Libro *destinazione, Libro *sorgente);
+void copia_libro(Libro *destinazione, Libro *sorgente);
 
 Nodo *ricerca_libri(Nodo *libreria, Libro *filtri);
 
 int noleggia(Libro* libro);
 
-void aggiorna_scadenza(Nodo* libreria);
+void aggiorna_scadenze_prestiti(Nodo* libreria);
 
 void write_log(char* text);
 
-void generate_log(Nodo* risultato);
+void generate_log(Nodo* risultato, int noleggio);
 
 #endif

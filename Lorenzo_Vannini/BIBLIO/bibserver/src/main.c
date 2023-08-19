@@ -1,21 +1,17 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/syscall.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "../lib/libro/libro.h"
 #include "../lib/unboundedqueue/unboundedqueue.h"
 
-struct Request
-{
+struct Request {
   Nodo *radice_libreria;
   int noleggio;
   Libro *filtro;
@@ -25,48 +21,56 @@ typedef struct Request Request;
 
 pthread_mutex_t buffer_mutex;
 
-volatile sig_atomic_t terminazione = 0;
+volatile int terminazione = 0;
 
-void termina_processo(int signum)
-{
-  printf("Termino il server\n");
+void termina_processo(int signum) {
+  write_log("Terminazione Server");
   terminazione = 1;
 }
 
-void *worker(void *arg)
-{
+void *worker(void *arg) {
   pid_t tid = syscall(SYS_gettid); // prende l'id del sottoprocesso corrente
   char *out_buffer = malloc(250);  // il buffer in cui mettiamo la stringa formattata da stampare nel log
+  if (out_buffer == NULL)
+    exit(1);
+
   Queue_t *coda = (Queue_t *)arg;
 
-  while (!terminazione)
-  {
+  printf("Worker %d avviato\n", tid);
+  sprintf(out_buffer, "Worker %d avviato", tid);
+  write_log(out_buffer);
+
+  while (!terminazione || length(coda) > 0) {
+    if (length(coda) == 0) {
+      printf("Worker %d e' in attesa di richieste\n", tid);
+      continue;
+    }
+    printf("Worker %d serve una richiesta\n", tid);
     Request *richiesta = (Request *)pop(coda);
     Nodo *libreria = richiesta->radice_libreria;
+
     Nodo *risultato = ricerca_libri(libreria, richiesta->filtro);
 
-    if (richiesta->noleggio == 1)
-    {
+    if (richiesta->noleggio == 1) {
       sprintf(out_buffer, "%d - servo richiesta noleggio", tid); // fa il lavoro della printf ma anzichè stamparla la mette in un buffer
       write_log(out_buffer);
       Nodo *cursore = risultato;
       Nodo *noleggiati = NULL;
       Nodo *noleggiati_cursore = NULL;
-      aggiorna_scadenza(libreria);
-      while (cursore != NULL)
-      {
-        if (noleggia(cursore->libro))
-        {
-          if (noleggiati == NULL)
-          {
+      aggiorna_scadenze_prestiti(libreria);
+      while (cursore != NULL) {
+        if (noleggia(cursore->libro)) {
+          if (noleggiati == NULL) {
             noleggiati = malloc(sizeof(Nodo));
+            if (noleggiati == NULL)
+              exit(1);
             noleggiati_cursore = noleggiati;
             noleggiati->libro = cursore->libro;
             noleggiati->next = NULL;
-          }
-          else
-          {
+          } else {
             noleggiati_cursore->next = malloc(sizeof(Nodo));
+            if (noleggiati_cursore->next == NULL)
+              exit(1);
             noleggiati_cursore = noleggiati_cursore->next;
             noleggiati_cursore->libro = cursore->libro;
             noleggiati_cursore->next = NULL;
@@ -74,22 +78,27 @@ void *worker(void *arg)
         }
         cursore = cursore->next;
       }
-      generate_log(noleggiati);
+      generate_log(noleggiati, 1);
       // Invio risposta
-    }
-    generate_log(risultato);
+    } else
+      generate_log(risultato, 0);
     // Invio risposta
+
+    // if (richiesta->filtro->prestito != NULL)
+    //   free(richiesta->filtro->prestito);
+    // free(richiesta);
+    // richiesta = NULL;
   }
 }
 
-int main(void)
-{
+int main(void) {
   Nodo *testa_lista; // puntatore alla radice della lista
 
-  testa_lista = riempi_catalogo("../data/biblioteca_1.txt");
+  printf("CARICAMENTO CATALOGO DA FILE\n");
+  testa_lista = crea_catalogo_da_file("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/data/biblioteca_1.txt");
 
-  if (pthread_mutex_init(&buffer_mutex, NULL) != 0)
-  {
+  printf("INIZIALIZZO PTHREAD MUTEX\n");
+  if (pthread_mutex_init(&buffer_mutex, NULL) != 0) {
     perror("pthread_mutex_init() error");
     exit(1);
   }
@@ -97,15 +106,24 @@ int main(void)
   int num_workers = 5;
   if (num_workers <= 0)
     return 0;
+  printf("CREATO ARRAY GESTIONE THREAD\n");
   pthread_t *workers = malloc(sizeof(pthread_t) * num_workers);
+  if (workers == NULL)
+    exit(1);
 
   // crea il buffer
+  printf("CREO QUEUE PER GESTIONE RICHIESTE\n");
   Queue_t *buffer = initQueue();
 
+  printf("PULIZIA LOG\n");
   FILE *log = fopen("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/requests.log", "w");
   fclose(log);
 
+  printf("CREO RICHIESTA DI PROVA\n");
   Request *richiesta = (Request *)malloc(sizeof(Request));
+  if (richiesta == NULL)
+    exit(1);
+  printf("POPOLO RICHIESTA DI PROVA\n");
   Libro filtro;
   strcpy(filtro.autore[0], "");
   strcpy(filtro.titolo, "arte della");
@@ -117,35 +135,42 @@ int main(void)
   richiesta->filtro = &filtro;
   richiesta->noleggio = 1;
   richiesta->radice_libreria = testa_lista;
-  push(buffer, (void *)richiesta);
-  push(buffer, (void *)richiesta);
-  push(buffer, (void *)richiesta);
-  push(buffer, (void *)richiesta);
-  push(buffer, (void *)richiesta);
-  write_log("Server avviato");
 
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+  push(buffer, (void *)richiesta);
+
+  write_log("Avvio Server");
+
+  printf("AVVIO I WORKER\n");
+  write_log("Avvio i Worker");
   // avvia m worker
-  for (int i = 0; i < num_workers; i++)
-  {
-    if (pthread_create(&(workers[i]), NULL, worker, buffer) != 0)
-    {
+  for (int i = 0; i < num_workers; i++) {
+    if (pthread_create(&(workers[i]), NULL, worker, buffer) != 0) {
       perror("pthread_create() error");
       exit(1);
     }
   }
 
+  printf("REGISTRAZIONE ASCOLTO SEGNALI DI SISTEMA\n");
+  write_log("Registrazione segnali di terminazione");
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   action.sa_handler = termina_processo;
   sigaction(SIGTERM, &action, NULL);
-  sigaction(SIGINTR, &action, NULL);
+  sigaction(SIGINT, &action, NULL);
 
+  printf("ASPETTO I WORKER PER LA TERMINAZIONE\n");
   // aspetto i worker
-  for (int i = 0; i < num_workers; i++)
-  {
+  for (int i = 0; i < num_workers; i++) {
     pthread_mutex_lock(&buffer_mutex);
-    if (pthread_join(workers[i], NULL) != 0)
-    {
+    if (pthread_join(workers[i], NULL) != 0) {
       perror("pthread_create() error");
       exit(1);
     }
