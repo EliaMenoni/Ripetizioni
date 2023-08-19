@@ -7,11 +7,11 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
+                "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/src/main.c",
                 "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/lib/libro/libro.c",
                 "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/lib/unboundedqueue/unboundedqueue.c",
                 "-o",
-                "${fileDirname}/../bin/${fileBasenameNoExtension}.out",
+                "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/bin/server",
                 "-lpthread",
                 "-lm"
             ],
