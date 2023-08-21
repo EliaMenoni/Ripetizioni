@@ -222,7 +222,7 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
         invia = (Nodo *)malloc(sizeof(Nodo));
         if (invia == NULL)
           exit(1);
-        // Inizializzo il cursore
+        // Inizializzo il cursorehttps://prod.liveshare.vsengsaas.visualstudio.com/join?8D576F99B8E14100306451BAEEC171D975C1
         nodo_invia = invia;
       } else {
         // Se la lista da inviare non e' vuota

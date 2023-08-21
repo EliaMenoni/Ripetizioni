@@ -1,7 +1,11 @@
-Server avviato
-27607 - servo richiesta noleggio
-27607 - Numero di libri presenti: 2
-27608 - servo richiesta noleggio
-27609 - servo richiesta noleggio
-27610 - servo richiesta noleggio
-27611 - servo richiesta noleggio
+Avvio Server
+Avvio i Worker
+Worker 34978 avviato
+Worker 34979 avviato
+Worker 34980 avviato
+Worker 34981 avviato
+Registrazione segnali di terminazione
+Worker 34982 avviato
+34978 - Numero di libri inviati: 2
+	- L'arte della persuasione di (1* autore) Emily Johnson anno 2015
+	- L'arte della comunicazione di (1* autore) Emma Scott anno 2017
