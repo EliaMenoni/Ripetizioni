@@ -12,7 +12,7 @@ struct Libro {
   char collocazione[10];
   char luogo_pubblicazione[20];
   char descrizione_fisica[250];
-  char *prestito;
+  char prestito[12];
   pthread_mutex_t qlock;
   pthread_cond_t  qcond;
 };

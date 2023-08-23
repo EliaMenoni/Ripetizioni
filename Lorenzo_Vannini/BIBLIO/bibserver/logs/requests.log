@@ -1,11 +1,10 @@
 Avvio Server
 Avvio i Worker
-Worker 34978 avviato
-Worker 34979 avviato
-Worker 34980 avviato
-Worker 34981 avviato
+Worker 24459 avviato
+Worker 24460 avviato
+Worker 24461 avviato
+Worker 24462 avviato
 Registrazione segnali di terminazione
-Worker 34982 avviato
-34978 - Numero di libri inviati: 2
-	- L'arte della persuasione di (1* autore) Emily Johnson anno 2015
-	- L'arte della comunicazione di (1* autore) Emma Scott anno 2017
+Worker 24463 avviato
+24460 - servo richiesta noleggio
+24460 - Numero di libri noleggiati: 0

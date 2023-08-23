@@ -20,7 +20,7 @@ int main(int argc, char const *argv[])
     filtro.anno = -1;
     strcpy(filtro.collocazione, "");
     strcpy(filtro.descrizione_fisica, "");
-    filtro.prestito = NULL;
+    strcpy(filtro.prestito, "");
 
     int status, valread, client_fd;
     struct sockaddr_in serv_addr;
@@ -49,13 +49,17 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    int noleggio = 0;
+    int noleggio = 1;
     send(client_fd, &filtro, sizeof(Libro), 0);
     send(client_fd, &noleggio, sizeof(int), 0);
 
     Libro ricevuto;
-    valread = read(client_fd, &ricevuto, sizeof(Libro));
-    printf("%s\n", ricevuto.titolo);
+    do
+    {
+        valread = read(client_fd, &ricevuto, sizeof(Libro));
+        if (ricevuto.numero_autori != -1)
+            stampa_libro(&ricevuto);
+    } while (ricevuto.numero_autori != -1);
 
     // closing the connected socket
     close(client_fd);

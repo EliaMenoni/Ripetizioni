@@ -97,6 +97,7 @@ void *worker(void *arg)
       cursore = noleggiati;
       while (cursore)
       {
+        stampa_libro(cursore->libro);
         send(richiesta->connection_number, cursore->libro, sizeof(Libro), 0);
         cursore = cursore->next;
       }
@@ -106,6 +107,7 @@ void *worker(void *arg)
       generate_log(risultato, 0);
       while (risultato)
       {
+        stampa_libro(risultato->libro);
         send(richiesta->connection_number, risultato->libro, sizeof(Libro), 0);
         risultato = risultato->next;
       }
@@ -116,6 +118,9 @@ void *worker(void *arg)
     //   free(richiesta->filtro->prestito);
     // free(richiesta);
     // richiesta = NULL;
+    Libro stream_end;
+    stream_end.numero_autori = -1;
+    send(richiesta->connection_number, &stream_end, sizeof(Libro), 0);
     close(richiesta->connection_number);
     free(richiesta);
   }

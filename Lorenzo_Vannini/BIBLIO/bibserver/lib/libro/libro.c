@@ -31,7 +31,7 @@ void stampa_libro(Libro *libro) {
   printf("collocazione: %s\n", libro->collocazione);
   printf("luogo_pubblicazione: %s\n", libro->luogo_pubblicazione);
   printf("descrizione_fisica: %s\n", libro->descrizione_fisica);
-  if (libro->prestito != NULL)
+  if (strcmp(libro->prestito, "") != 0)
     printf("prestito: %s\n", libro->prestito);
   else
     printf("prestito:\n");
@@ -51,8 +51,8 @@ Libro *crea_libro_da_stringa(char *riga) {
   Libro *in = (Libro *)malloc(sizeof(Libro));
   if (in == NULL)
     exit(1);
-
-  in->prestito = NULL;
+  
+  strcmp(in->prestito, "");
 
   int i = 0;
   char *token;
@@ -83,10 +83,6 @@ Libro *crea_libro_da_stringa(char *riga) {
       else if (strcmp(attributo, "descrizione_fisica") == 0)
         strcpy(in->descrizione_fisica, dato_inserire);
       else if (strcmp(attributo, "prestito") == 0) {
-        in->prestito = (char *)malloc(sizeof(char) * 11);
-        if (in->prestito == NULL)
-          exit(1);
-
         strcpy(in->prestito, dato_inserire);
       }
     }
@@ -134,14 +130,7 @@ void copia_libro(Libro *destinazione, Libro *sorgente) {
   strcpy(destinazione->collocazione, sorgente->collocazione);
   strcpy(destinazione->luogo_pubblicazione, sorgente->luogo_pubblicazione);
   strcpy(destinazione->descrizione_fisica, sorgente->descrizione_fisica);
-  if (sorgente->prestito != NULL && destinazione->prestito != NULL)
-    strcpy(destinazione->prestito, sorgente->prestito);
-  else if (sorgente->prestito != NULL) {
-    destinazione->prestito = malloc(sizeof(char) * 11);
-    if (destinazione->prestito == NULL)
-      exit(1);
-  } else
-    destinazione->prestito = NULL;
+  strcpy(destinazione->prestito, sorgente->prestito);
 }
 
 Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
@@ -207,7 +196,7 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
         valido = valido & 0;
     }
     // FILTRO PRESTITO
-    if (filtri->prestito != NULL) {
+    if (strcmp(filtri->prestito, "") != 0) {
       if (strstr(cursore->libro->prestito, filtri->prestito))
         valido = valido & 1;
       else
@@ -252,7 +241,7 @@ void aggiorna_scadenze_prestiti(Nodo *libreria) {
   while (libreria != NULL) {
     LockLibrary(libreria->libro);
 
-    if (libreria->libro->prestito != NULL) {
+    if (strcmp(libreria->libro->prestito, "") != 0) {
       struct tm data;
       strptime(libreria->libro->prestito, "%d/%m/%Y", &data);
 
@@ -260,8 +249,7 @@ void aggiorna_scadenze_prestiti(Nodo *libreria) {
       if (data.tm_year < today->tm_year ||
           (data.tm_year == today->tm_year && data.tm_mon < today->tm_mon) ||
           (data.tm_year == today->tm_year && data.tm_mon == today->tm_mon && data.tm_mday < today->tm_mday)) {
-        free(libreria->libro->prestito); // La data fornita è precedente a quella attuale
-        libreria->libro->prestito = NULL;
+        strcpy(libreria->libro->prestito, "");
       }
     }
 
@@ -282,10 +270,7 @@ int noleggia(Libro *libro) {
     struct tm *today;
     now = time(NULL);
     today = localtime(&now);
-    libro->prestito = malloc(sizeof(char) * 11);
-    if (libro->prestito == NULL)
-      exit(1);
-
+    
     snprintf(libro->prestito, 11, "%02d/%02d/%04d", today->tm_mday, today->tm_mon + 2, today->tm_year + 1900); //+1 di base e +1 per scadenza del mese di prestito
 
     UnlockLibraryAndSignal(libro);
@@ -338,7 +323,7 @@ void generate_log(Nodo *risultato, int noleggio) {
   iteratore = risultato;
 
   while (iteratore) {
-    sprintf(buffer, "%s\t- %s di (1* autore) %s anno %d", buffer, iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno);
+    sprintf(buffer, "%s\t- %s di (1* autore) %s anno %d noleggio %s", buffer, iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
     if (iteratore->next != NULL)
       sprintf(buffer, "%s\n", buffer);
     iteratore = iteratore->next;
