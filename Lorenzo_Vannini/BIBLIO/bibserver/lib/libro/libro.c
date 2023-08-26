@@ -243,12 +243,13 @@ void aggiorna_scadenze_prestiti(Nodo *libreria) {
 
     if (strcmp(libreria->libro->prestito, "") != 0) {
       struct tm data;
-      strptime(libreria->libro->prestito, "%d/%m/%Y", &data);
+      strptime(libreria->libro->prestito, "%S/%M/%H", &data);
 
       // Confronta le date
-      if (data.tm_year < today->tm_year ||
-          (data.tm_year == today->tm_year && data.tm_mon < today->tm_mon) ||
-          (data.tm_year == today->tm_year && data.tm_mon == today->tm_mon && data.tm_mday < today->tm_mday)) {
+      printf("Prestito\t\tOra\n%d\t\t%d\n%d\t\t%d\n%d\t\t%d\n", data.tm_hour, today->tm_hour, data.tm_min, today->tm_min, data.tm_sec, today->tm_sec);
+      if (data.tm_hour < today->tm_hour ||
+          (data.tm_hour == today->tm_hour && data.tm_min < today->tm_min) ||
+          (data.tm_hour == today->tm_hour && data.tm_min == today->tm_min && data.tm_sec < today->tm_sec)) {
         strcpy(libreria->libro->prestito, "");
       }
     }
@@ -271,7 +272,7 @@ int noleggia(Libro *libro) {
     now = time(NULL);
     today = localtime(&now);
 
-    snprintf(libro->prestito, 11, "%02d/%02d/%04d", today->tm_mday, today->tm_mon + 2, today->tm_year + 1900); //+1 di base e +1 per scadenza del mese di prestito
+    snprintf(libro->prestito, 11, "%02d/%02d/%04d", (today->tm_sec + 30)%60, today->tm_min + (int)((today->tm_sec+30)/60)%60 , (today->tm_hour)%24); //+1 di base e +1 per scadenza del mese di prestito
 
     UnlockLibraryAndSignal(libro);
     return 1;

@@ -53,8 +53,9 @@ void *worker(void *arg)
       //printf("Worker %d e' in attesa di richieste\n", tid);
       continue;
     }
-    printf("Worker %d serve una richiesta\n", tid);
+    
     Request *richiesta = (Request *)pop(coda);
+    printf("Worker %d serve una richiesta\n", tid);
     Nodo *libreria = richiesta->radice_libreria;
 
     Nodo *risultato = ricerca_libri(libreria, richiesta->filtro);
@@ -126,12 +127,19 @@ void *worker(void *arg)
   }
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+  if(argc < 4) {
+    printf("Format: server bib_name record_file W\n");
+    return 1;
+  }
+
+  write_log(argv[1], 0);
+
   Nodo *testa_lista; // puntatore alla radice della lista
 
   printf("CARICAMENTO CATALOGO DA FILE\n");
-  testa_lista = crea_catalogo_da_file("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/data/biblioteca_1.txt");
+  testa_lista = crea_catalogo_da_file(argv[2]);
 
   printf("INIZIALIZZO PTHREAD MUTEX\n");
   if (pthread_mutex_init(&buffer_mutex, NULL) != 0)
@@ -140,9 +148,11 @@ int main(void)
     exit(1);
   }
 
-  int num_workers = 5;
-  if (num_workers <= 0)
+  int num_workers = atoi(argv[3]);
+  if (num_workers <= 0){
+    printf("W must be > 0\n");
     return 0;
+  }
   printf("CREATO ARRAY GESTIONE THREAD\n");
   pthread_t *workers = malloc(sizeof(pthread_t) * num_workers);
   if (workers == NULL)

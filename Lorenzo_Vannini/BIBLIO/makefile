@@ -22,7 +22,7 @@ compile server.out client.out:
 
 .PHONY: server
 server:
-	$(server_folder)/$(bin_folder)/server.out
+	$(server_folder)/$(bin_folder)/server.out Biblioteca-Civica $(server_folder)/data/biblioteca_1.txt 5
 
 .PHONY: client
 client:

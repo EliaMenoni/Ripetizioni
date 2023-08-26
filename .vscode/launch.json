@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "Server Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/bin/server.out",
+            "args": [
+                "Biblioteca-Civica",
+                "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/data/biblioteca_1.txt",
+                "7"
+            ],
+            "cwd": "${fileDirname}",
+        }
+    ]
+}
