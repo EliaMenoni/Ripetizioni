@@ -51,7 +51,7 @@ Libro *crea_libro_da_stringa(char *riga) {
   Libro *in = (Libro *)malloc(sizeof(Libro));
   if (in == NULL)
     exit(1);
-  
+
   strcmp(in->prestito, "");
 
   int i = 0;
@@ -260,7 +260,7 @@ void aggiorna_scadenze_prestiti(Nodo *libreria) {
 
 int noleggia(Libro *libro) {
   LockLibrary(libro);
-  if (libro->prestito != NULL) {
+  if (strcmp(libro->prestito, "")) {
     // Si presuppone che al momento del noleggio sia gia' stat invocata la aggiorna_libreria_prestiti e che quindi se libro.prestito non e' NULL e' stato assegnato da un altro worker
     UnlockLibraryAndSignal(libro);
     return 0;
@@ -270,7 +270,7 @@ int noleggia(Libro *libro) {
     struct tm *today;
     now = time(NULL);
     today = localtime(&now);
-    
+
     snprintf(libro->prestito, 11, "%02d/%02d/%04d", today->tm_mday, today->tm_mon + 2, today->tm_year + 1900); //+1 di base e +1 per scadenza del mese di prestito
 
     UnlockLibraryAndSignal(libro);
@@ -278,56 +278,81 @@ int noleggia(Libro *libro) {
   }
 }
 
-void write_log(char *text) {    // apre un file e scrive una stringa data da noi, dobbiamo sfruttare lock e unlock perchè non possiamo accedere a un file con più thread contemporaneamente
-  static pthread_mutex_t qlock; // per rendere il semaforo disponibile a tutti i thread, anzichè passarlo come argomento, lo abbiamo reso statico
-  static pthread_cond_t qcond;  // viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
+void write_log(void *data, int type) { // apre un file e scrive una stringa data da noi, dobbiamo sfruttare lock e unlock perchè non possiamo accedere a un file con più thread contemporaneamente
+  static pthread_mutex_t qlock;        // per rendere il semaforo disponibile a tutti i thread, anzichè passarlo come argomento, lo abbiamo reso statico
+  static pthread_cond_t qcond;         // viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
   LOCK(&qlock);
-
   FILE *log;
   log = fopen("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/requests.log", "a+"); // apro il file con "a+" perchè permette di aprire il file in scrittura senza cancellare il contenuto e posizionandosi alla fine.
   if (log == NULL)                                                                                 // mentre con "w" il contenuto veniva cancellato ogni volta, stampando solo l'ultima esecuzione
     exit(1);
 
-  fprintf(log, "%s\n", text); // scrivo nel file di log il testo dato da noi e mando a capo, poi chiudo il file
+  if (type == 0) { // Stringa
+    char *text = (char *)data;
 
+    fprintf(log, "%s\n", text); // scrivo nel file di log il testo dato da noi e mando a capo, poi chiudo il file
+
+  } else if (type == 1) { // Risultato Operazione Query
+    Nodo *libri = (Nodo *)data;
+
+    if (libri == NULL) {
+      fprintf(log, "%ld - Numero di libri inviati: 0\n", syscall(SYS_gettid));
+      fclose(log);
+      UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
+      SIGNAL(&qcond);
+      return;
+    }
+
+    int n_libri = 0;
+    Nodo *iteratore = libri;
+    while (iteratore != NULL) {
+      n_libri++;
+      iteratore = iteratore->next;
+      // da aggiungere i dati
+    }
+
+    fprintf(log, "%ld - Numero di libri inviati: %d\n", syscall(SYS_gettid), n_libri);
+
+    iteratore = libri;
+    while (iteratore) {
+      fprintf(log, "\t- %s di (1* autore) %s anno %d noleggio %s", iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
+      if (iteratore->next != NULL)
+        fprintf(log, "\n");
+      iteratore = iteratore->next;
+    }
+  } else if (type == 2) { // Risultato Operazione Noleggio
+    Nodo *libri = (Nodo *)data;
+
+    if (libri == NULL) {
+      fprintf(log, "%ld - Numero di libri noleggiati: 0\n", syscall(SYS_gettid));
+      fclose(log);
+      UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
+      SIGNAL(&qcond);
+      return;
+    }
+
+    int n_libri = 0;
+    Nodo *iteratore = libri;
+    while (iteratore != NULL) {
+      n_libri++;
+      iteratore = iteratore->next;
+      // da aggiungere i dati
+    }
+
+    fprintf(log, "%ld - Numero di libri noleggiati: %d\n", syscall(SYS_gettid), n_libri);
+
+    iteratore = libri;
+    while (iteratore) {
+      fprintf(log, "\t- %s di (1* autore) %s anno %d noleggio %s\n", iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
+      iteratore = iteratore->next;
+    }
+  } else if (type == 3) { // LOG Query
+    Libro *libri = (Libro *)data;
+
+    fprintf(log, "%ld - Applica la query:\n", syscall(SYS_gettid));
+    // DA FARE
+  }
   fclose(log);
   UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
   SIGNAL(&qcond);
-}
-
-void generate_log(Nodo *risultato, int noleggio) {
-  char buffer[10000];
-  if (noleggio && risultato == NULL) {
-    sprintf(buffer, "%ld - Numero di libri noleggiati: 0", syscall(SYS_gettid));
-    write_log(buffer);
-    return;
-  } else if(risultato == NULL) {
-    sprintf(buffer, "%ld - Numero di libri inviati: 0", syscall(SYS_gettid));
-    write_log(buffer);
-    return;
-  }
-
-  int n_libri = 0;
-  Nodo *iteratore = risultato;
-  while (iteratore != NULL) {
-    n_libri++;
-    iteratore = iteratore->next;
-    // da aggiungere i dati
-  }
-
-  if (noleggio)
-    sprintf(buffer, "%ld - Numero di libri noleggiati: %d\n", syscall(SYS_gettid), n_libri);
-  else
-    sprintf(buffer, "%ld - Numero di libri inviati: %d\n", syscall(SYS_gettid), n_libri);
-
-  iteratore = risultato;
-
-  while (iteratore) {
-    sprintf(buffer, "%s\t- %s di (1* autore) %s anno %d noleggio %s", buffer, iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
-    if (iteratore->next != NULL)
-      sprintf(buffer, "%s\n", buffer);
-    iteratore = iteratore->next;
-  }
-
-  write_log(buffer);
 }

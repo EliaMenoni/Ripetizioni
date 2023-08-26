@@ -29,7 +29,7 @@ volatile int terminazione = 0;
 
 void termina_processo(int signum)
 {
-  write_log("Terminazione Server");
+  write_log("Terminazione Server", 0);
   terminazione = 1;
 }
 
@@ -44,7 +44,7 @@ void *worker(void *arg)
 
   printf("Worker %d avviato\n", tid);
   sprintf(out_buffer, "Worker %d avviato", tid);
-  write_log(out_buffer);
+  write_log(out_buffer, 0);
 
   while (!terminazione || length(coda) > 0)
   {
@@ -62,7 +62,7 @@ void *worker(void *arg)
     if (richiesta->noleggio == 1)
     {
       sprintf(out_buffer, "%d - servo richiesta noleggio", tid); // fa il lavoro della printf ma anzichè stamparla la mette in un buffer
-      write_log(out_buffer);
+      write_log(out_buffer, 0);
       Nodo *cursore = risultato;
       Nodo *noleggiati = NULL;
       Nodo *noleggiati_cursore = NULL;
@@ -92,19 +92,19 @@ void *worker(void *arg)
         }
         cursore = cursore->next;
       }
-      generate_log(noleggiati, 1);
+      write_log(noleggiati, 2);
 
       cursore = noleggiati;
       while (cursore)
       {
-        stampa_libro(cursore->libro);
+        // stampa_libro(cursore->libro);
         send(richiesta->connection_number, cursore->libro, sizeof(Libro), 0);
         cursore = cursore->next;
       }
     }
     else
     {
-      generate_log(risultato, 0);
+      write_log(risultato, 1);
       while (risultato)
       {
         stampa_libro(risultato->libro);
@@ -159,10 +159,10 @@ int main(void)
   // push(buffer, (void *)richiesta);
   // push(buffer, (void *)richiesta);
 
-  write_log("Avvio Server");
+  write_log("Avvio Server", 0);
 
   printf("AVVIO I WORKER\n");
-  write_log("Avvio i Worker");
+  write_log("Avvio i Worker", 0);
   // avvia m worker
   for (int i = 0; i < num_workers; i++)
   {
@@ -174,7 +174,7 @@ int main(void)
   }
 
   printf("REGISTRAZIONE ASCOLTO SEGNALI DI SISTEMA\n");
-  write_log("Registrazione segnali di terminazione");
+  write_log("Registrazione segnali di terminazione", 0);
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   action.sa_handler = termina_processo;
@@ -196,7 +196,7 @@ int main(void)
 
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = inet_addr("127.0.0.1");
-  address.sin_port = htons(8000);
+  address.sin_port = htons(8002);
 
   // Forcefully attaching socket to the port 8000
   if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)

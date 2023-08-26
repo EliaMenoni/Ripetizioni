@@ -47,8 +47,6 @@ int noleggia(Libro* libro);
 
 void aggiorna_scadenze_prestiti(Nodo* libreria);
 
-void write_log(char* text);
-
-void generate_log(Nodo* risultato, int noleggio);
+void write_log(void* data, int type);
 
 #endif

@@ -7,7 +7,7 @@
 
 #include "../../bibserver/lib/libro/libro.h"
 
-#define PORT 8000
+#define PORT 8002
 
 int main(int argc, char const *argv[])
 {
