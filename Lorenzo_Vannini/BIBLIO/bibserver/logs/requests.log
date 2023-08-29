@@ -1,16 +1,13 @@
 Avvio Server
 Avvio i Worker
+Worker 42848 avviato
+Worker 42849 avviato
+Worker 42850 avviato
+Worker 42851 avviato
+Worker 42853 avviato
+Worker 42852 avviato
 Registrazione segnali di terminazione
-Worker 29810 avviato
-Worker 29811 avviato
-Worker 29812 avviato
-Worker 29809 avviato
-Worker 29808 avviato
-29809 - servo richiesta noleggio
-29809 - Numero di libri noleggiati: 2
-	- L'arte della persuasione di (1* autore) Emily Johnson anno 2015 noleggio 58/41/0009
-	- L'arte della comunicazione di (1* autore) Emma Scott anno 2017 noleggio 58/41/0009
-29811 - servo richiesta noleggio
-29811 - Numero di libri noleggiati: 2
-	- L'arte della persuasione di (1* autore) Emily Johnson anno 2015 noleggio 15/42/0009
-	- L'arte della comunicazione di (1* autore) Emma Scott anno 2017 noleggio 15/42/0009
+Worker 42854 avviato
+42852 - servo richiesta noleggio
+42852 - Numero di libri noleggiati: 1
+	- Il segreto del successo di (1* autore) John Smith anno 2010 noleggio 12/12/10

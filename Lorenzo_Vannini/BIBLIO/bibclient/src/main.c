@@ -6,21 +6,16 @@
 #include <stdlib.h>
 
 #include "../../bibserver/lib/libro/libro.h"
+#include "../../bibserver/lib/comprot/comprot.h"
 
 #define PORT 8002
 
 int main(int argc, char const *argv[])
 {
-    printf("POPOLO RICHIESTA DI PROVA\n");
-    Libro filtro;
-    filtro.numero_autori = 1;
-    strcpy(filtro.autore[0], "");
-    strcpy(filtro.titolo, "arte della");
-    strcpy(filtro.editore, "");
-    filtro.anno = -1;
-    strcpy(filtro.collocazione, "");
-    strcpy(filtro.descrizione_fisica, "");
-    strcpy(filtro.prestito, "");
+    Packet request;
+    request.type = MSG_LOAN;
+    strcpy(request.data, "titolo:Il segreto del successo;");
+    request.length = 1;
 
     int status, valread, client_fd;
     struct sockaddr_in serv_addr;
@@ -49,17 +44,16 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    int noleggio = 1;
-    send(client_fd, &filtro, sizeof(Libro), 0);
-    send(client_fd, &noleggio, sizeof(int), 0);
+    send(client_fd, &request, sizeof(Packet), 0);
 
-    Libro ricevuto;
+    Packet ricevuto;
     do
     {
-        valread = read(client_fd, &ricevuto, sizeof(Libro));
-        if (ricevuto.numero_autori != -1)
-            stampa_libro(&ricevuto);
-    } while (ricevuto.numero_autori != -1);
+        valread = read(client_fd, &ricevuto, sizeof(Packet));
+        if (ricevuto.type != MSG_NO)
+            // stampa_libro(&ricevuto);
+            printf("Libro: %s\n", ricevuto.data);
+    } while (ricevuto.type != MSG_NO);
 
     // closing the connected socket
     close(client_fd);

@@ -13,15 +13,19 @@
 #include <time.h>
 #include <unistd.h>
 
+#define atoa(x) #x
+
 static inline void LockLibrary(Libro *q) { LOCK(&q->qlock); }
 static inline void UnlockLibrary(Libro *q) { UNLOCK(&q->qlock); }
 static inline void UnlockLibraryAndWait(Libro *q) { WAIT(&q->qcond, &q->qlock); }
-static inline void UnlockLibraryAndSignal(Libro *q) {
+static inline void UnlockLibraryAndSignal(Libro *q)
+{
   SIGNAL(&q->qcond);
   UNLOCK(&q->qlock);
 }
 
-void stampa_libro(Libro *libro) {
+void stampa_libro(Libro *libro)
+{
   for (int j = 0; j < libro->numero_autori; j++)
     printf("autore: %s\n", libro->autore[j]);
   printf("titolo: %s\n", libro->titolo);
@@ -39,20 +43,34 @@ void stampa_libro(Libro *libro) {
   printf("\n");
 }
 
-void stampa_libreria(Nodo *libreria) {
-  while (libreria != NULL) {
+void stampa_libreria(Nodo *libreria)
+{
+  while (libreria != NULL)
+  {
     stampa_libro(libreria->libro);
     libreria = libreria->next;
   }
 }
 
-Libro *crea_libro_da_stringa(char *riga) {
+Libro *crea_libro_da_stringa(char *riga)
+{
   // Alloco memoria per libro
   Libro *in = (Libro *)malloc(sizeof(Libro));
   if (in == NULL)
     exit(1);
 
-  strcmp(in->prestito, "");
+  for (int i = 0; i < 5; i++)
+    strcpy(in->autore[i], "");
+  strcpy(in->collocazione, "");
+  strcpy(in->descrizione_fisica, "");
+  strcpy(in->editore, "");
+  strcpy(in->luogo_pubblicazione, "");
+  strcpy(in->nota, "");
+  strcpy(in->prestito, "");
+  strcpy(in->titolo, "");
+  in->anno = -1;
+  in->numero_autori = 0;
+  // strcmp(in->prestito, "");
 
   int i = 0;
   char *token;
@@ -60,15 +78,19 @@ Libro *crea_libro_da_stringa(char *riga) {
   char *attributo, *dato_inserire;
 
   token = strtok_r(riga, ";", &save1); // il save dice da che punto ripartire nella stringa
-  while (token != NULL) {
-    if (*token != '\n') {
+  while (token != NULL)
+  {
+    if (*token != '\n')
+    {
       attributo = strtok_r(token, ":", &save2);
       dato_inserire = strtok_r(NULL, ":", &save2);
 
-      if (strcmp(attributo, "autore") == 0) {
+      if (strcmp(attributo, "autore") == 0)
+      {
         strcpy(in->autore[i], dato_inserire);
         i++;
-      } else if (strcmp(attributo, "titolo") == 0)
+      }
+      else if (strcmp(attributo, "titolo") == 0)
         strcpy(in->titolo, dato_inserire);
       else if (strcmp(attributo, "editore") == 0)
         strcpy(in->editore, dato_inserire);
@@ -82,7 +104,8 @@ Libro *crea_libro_da_stringa(char *riga) {
         strcpy(in->luogo_pubblicazione, dato_inserire);
       else if (strcmp(attributo, "descrizione_fisica") == 0)
         strcpy(in->descrizione_fisica, dato_inserire);
-      else if (strcmp(attributo, "prestito") == 0) {
+      else if (strcmp(attributo, "prestito") == 0)
+      {
         strcpy(in->prestito, dato_inserire);
       }
     }
@@ -93,7 +116,8 @@ Libro *crea_libro_da_stringa(char *riga) {
   return in;
 }
 
-Nodo *crea_catalogo_da_file(char *file) {
+Nodo *crea_catalogo_da_file(char *file)
+{
   Nodo *catalogo;
   Nodo *nodo, *precedente;
   // Apro il file
@@ -104,7 +128,8 @@ Nodo *crea_catalogo_da_file(char *file) {
     exit(1);
 
   nodo = catalogo;
-  while (fgets(riga, 1000, in_file)) {
+  while (fgets(riga, 1000, in_file))
+  {
     nodo->libro = crea_libro_da_stringa(riga);
     nodo->next = malloc(sizeof(Nodo));
     if (nodo->next == NULL)
@@ -118,9 +143,11 @@ Nodo *crea_catalogo_da_file(char *file) {
   return catalogo;
 }
 
-void copia_libro(Libro *destinazione, Libro *sorgente) {
+void copia_libro(Libro *destinazione, Libro *sorgente)
+{
   destinazione->numero_autori = sorgente->numero_autori;
-  for (int i = 0; i < sorgente->numero_autori; i++) {
+  for (int i = 0; i < sorgente->numero_autori; i++)
+  {
     strcpy(destinazione->autore[i], sorgente->autore[i]);
   }
   strcpy(destinazione->titolo, sorgente->titolo);
@@ -133,17 +160,20 @@ void copia_libro(Libro *destinazione, Libro *sorgente) {
   strcpy(destinazione->prestito, sorgente->prestito);
 }
 
-Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
+Nodo *ricerca_libri(Nodo *cursore, Libro *filtri)
+{
   int valido;
   Nodo *invia = NULL;
   Nodo *nodo_invia = NULL;
 
   // Per ogni elemento della libreria
-  while (cursore) {
+  while (cursore)
+  {
     valido = 1;
 
     // Se esiste un filtro sull'autore si trova nel primo elemento dell'array autore
-    if (strcmp(filtri->autore[0], "") != 0) {
+    if (strcmp(filtri->autore[0], "") != 0)
+    {
       int trovato = 0;
       // Cerca l'autore indicato nel nodo corrente della libreria
       for (int i = 0; i < cursore->libro->numero_autori; i++)
@@ -156,7 +186,8 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
         valido = valido & 0;
     }
     // FILTRO TITOLO
-    if (strcmp(filtri->titolo, "") != 0) {
+    if (strcmp(filtri->titolo, "") != 0)
+    {
       // guarda se esistono sottostringhe della seconda parola
       // all'interno della prima
       if (strstr(cursore->libro->titolo, filtri->titolo))
@@ -166,7 +197,8 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
     }
     // FILTRO EDITORE
     if (strcmp(filtri->editore, "") !=
-        0) { // guarda se esistono sottostringhe della seconda parola
+        0)
+    { // guarda se esistono sottostringhe della seconda parola
       // all'interno della prima
       if (strstr(cursore->libro->editore, filtri->editore))
         valido = valido & 1;
@@ -174,21 +206,24 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
         valido = valido & 0;
     }
     // FILTRO ANNO
-    if (filtri->anno != -1) {
+    if (filtri->anno != -1)
+    {
       if (filtri->anno == cursore->libro->anno)
         valido = valido & 1;
       else
         valido = valido & 0;
     }
     // FILTRO COLLOCAZIONE
-    if (strcmp(filtri->collocazione, "") != 0) {
+    if (strcmp(filtri->collocazione, "") != 0)
+    {
       if (strstr(cursore->libro->collocazione, filtri->collocazione))
         valido = valido & 1;
       else
         valido = valido & 0;
     }
     // FILTRO DESCRIZIONE FISICA
-    if (strcmp(filtri->descrizione_fisica, "") != 0) {
+    if (strcmp(filtri->descrizione_fisica, "") != 0)
+    {
       if (strstr(cursore->libro->descrizione_fisica,
                  filtri->descrizione_fisica))
         valido = valido & 1;
@@ -196,7 +231,8 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
         valido = valido & 0;
     }
     // FILTRO PRESTITO
-    if (strcmp(filtri->prestito, "") != 0) {
+    if (strcmp(filtri->prestito, "") != 0)
+    {
       if (strstr(cursore->libro->prestito, filtri->prestito))
         valido = valido & 1;
       else
@@ -204,16 +240,20 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
     }
 
     // Se dopo il controllo di tutti i filtri il libro e' valido
-    if (valido) {
+    if (valido)
+    {
       // Guardo se la listad a inviare e' vuota
-      if (invia == NULL) {
+      if (invia == NULL)
+      {
         // Se e' vuota creo il primo elemento
         invia = (Nodo *)malloc(sizeof(Nodo));
         if (invia == NULL)
           exit(1);
-        // Inizializzo il cursorehttps://prod.liveshare.vsengsaas.visualstudio.com/join?8D576F99B8E14100306451BAEEC171D975C1
+        // Inizializzo il cursore
         nodo_invia = invia;
-      } else {
+      }
+      else
+      {
         // Se la lista da inviare non e' vuota
         // Creo il nodo successivo
         nodo_invia->next = (Nodo *)malloc(sizeof(Nodo));
@@ -233,23 +273,27 @@ Nodo *ricerca_libri(Nodo *cursore, Libro *filtri) {
   return invia;
 }
 
-void aggiorna_scadenze_prestiti(Nodo *libreria) {
+void aggiorna_scadenze_prestiti(Nodo *libreria)
+{
   time_t now = time(NULL);
   struct tm *today;
   today = localtime(&now);
 
-  while (libreria != NULL) {
+  while (libreria != NULL)
+  {
     LockLibrary(libreria->libro);
 
-    if (strcmp(libreria->libro->prestito, "") != 0) {
+    if (strcmp(libreria->libro->prestito, "") != 0)
+    {
       struct tm data;
       strptime(libreria->libro->prestito, "%S/%M/%H", &data);
 
       // Confronta le date
-      printf("Prestito\t\tOra\n%d\t\t%d\n%d\t\t%d\n%d\t\t%d\n", data.tm_hour, today->tm_hour, data.tm_min, today->tm_min, data.tm_sec, today->tm_sec);
+      // printf("Prestito\t\tOra\n%d\t\t%d\n%d\t\t%d\n%d\t\t%d\n", data.tm_hour, today->tm_hour, data.tm_min, today->tm_min, data.tm_sec, today->tm_sec);
       if (data.tm_hour < today->tm_hour ||
           (data.tm_hour == today->tm_hour && data.tm_min < today->tm_min) ||
-          (data.tm_hour == today->tm_hour && data.tm_min == today->tm_min && data.tm_sec < today->tm_sec)) {
+          (data.tm_hour == today->tm_hour && data.tm_min == today->tm_min && data.tm_sec < today->tm_sec))
+      {
         strcpy(libreria->libro->prestito, "");
       }
     }
@@ -259,44 +303,51 @@ void aggiorna_scadenze_prestiti(Nodo *libreria) {
   }
 }
 
-int noleggia(Libro *libro) {
+int noleggia(Libro *libro)
+{
   LockLibrary(libro);
-  if (strcmp(libro->prestito, "")) {
+  if (strcmp(libro->prestito, ""))
+  {
     // Si presuppone che al momento del noleggio sia gia' stat invocata la aggiorna_libreria_prestiti e che quindi se libro.prestito non e' NULL e' stato assegnato da un altro worker
     UnlockLibraryAndSignal(libro);
     return 0;
-
-  } else {
+  }
+  else
+  {
     time_t now;
     struct tm *today;
     now = time(NULL);
     today = localtime(&now);
 
-    snprintf(libro->prestito, 11, "%02d/%02d/%04d", (today->tm_sec + 30)%60, today->tm_min + (int)((today->tm_sec+30)/60)%60 , (today->tm_hour)%24); //+1 di base e +1 per scadenza del mese di prestito
+    snprintf(libro->prestito, 11, "%02d/%02d/%02d", (today->tm_sec + 30) % 60, today->tm_min + (int)((today->tm_sec + 30) / 60) % 60, today->tm_hour); //+1 di base e +1 per scadenza del mese di prestito
 
     UnlockLibraryAndSignal(libro);
     return 1;
   }
 }
 
-void write_log(void *data, int type) { // apre un file e scrive una stringa data da noi, dobbiamo sfruttare lock e unlock perchè non possiamo accedere a un file con più thread contemporaneamente
-  static pthread_mutex_t qlock;        // per rendere il semaforo disponibile a tutti i thread, anzichè passarlo come argomento, lo abbiamo reso statico
-  static pthread_cond_t qcond;         // viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
+void write_log(void *data, int type)
+{                               // apre un file e scrive una stringa data da noi, dobbiamo sfruttare lock e unlock perchè non possiamo accedere a un file con più thread contemporaneamente
+  static pthread_mutex_t qlock; // per rendere il semaforo disponibile a tutti i thread, anzichè passarlo come argomento, lo abbiamo reso statico
+  static pthread_cond_t qcond;  // viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
   LOCK(&qlock);
   FILE *log;
   log = fopen("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/requests.log", "a+"); // apro il file con "a+" perchè permette di aprire il file in scrittura senza cancellare il contenuto e posizionandosi alla fine.
   if (log == NULL)                                                                                 // mentre con "w" il contenuto veniva cancellato ogni volta, stampando solo l'ultima esecuzione
     exit(1);
 
-  if (type == 0) { // Stringa
+  if (type == 0)
+  { // Stringa
     char *text = (char *)data;
 
     fprintf(log, "%s\n", text); // scrivo nel file di log il testo dato da noi e mando a capo, poi chiudo il file
-
-  } else if (type == 1) { // Risultato Operazione Query
+  }
+  else if (type == 1)
+  { // Risultato Operazione Query
     Nodo *libri = (Nodo *)data;
 
-    if (libri == NULL) {
+    if (libri == NULL)
+    {
       fprintf(log, "%ld - Numero di libri inviati: 0\n", syscall(SYS_gettid));
       fclose(log);
       UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
@@ -306,7 +357,8 @@ void write_log(void *data, int type) { // apre un file e scrive una stringa data
 
     int n_libri = 0;
     Nodo *iteratore = libri;
-    while (iteratore != NULL) {
+    while (iteratore != NULL)
+    {
       n_libri++;
       iteratore = iteratore->next;
       // da aggiungere i dati
@@ -315,16 +367,20 @@ void write_log(void *data, int type) { // apre un file e scrive una stringa data
     fprintf(log, "%ld - Numero di libri inviati: %d\n", syscall(SYS_gettid), n_libri);
 
     iteratore = libri;
-    while (iteratore) {
+    while (iteratore)
+    {
       fprintf(log, "\t- %s di (1* autore) %s anno %d noleggio %s", iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
       if (iteratore->next != NULL)
         fprintf(log, "\n");
       iteratore = iteratore->next;
     }
-  } else if (type == 2) { // Risultato Operazione Noleggio
+  }
+  else if (type == 2)
+  { // Risultato Operazione Noleggio
     Nodo *libri = (Nodo *)data;
 
-    if (libri == NULL) {
+    if (libri == NULL)
+    {
       fprintf(log, "%ld - Numero di libri noleggiati: 0\n", syscall(SYS_gettid));
       fclose(log);
       UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
@@ -334,7 +390,8 @@ void write_log(void *data, int type) { // apre un file e scrive una stringa data
 
     int n_libri = 0;
     Nodo *iteratore = libri;
-    while (iteratore != NULL) {
+    while (iteratore != NULL)
+    {
       n_libri++;
       iteratore = iteratore->next;
       // da aggiungere i dati
@@ -343,11 +400,14 @@ void write_log(void *data, int type) { // apre un file e scrive una stringa data
     fprintf(log, "%ld - Numero di libri noleggiati: %d\n", syscall(SYS_gettid), n_libri);
 
     iteratore = libri;
-    while (iteratore) {
+    while (iteratore)
+    {
       fprintf(log, "\t- %s di (1* autore) %s anno %d noleggio %s\n", iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
       iteratore = iteratore->next;
     }
-  } else if (type == 3) { // LOG Query
+  }
+  else if (type == 3)
+  { // LOG Query
     Libro *libri = (Libro *)data;
 
     fprintf(log, "%ld - Applica la query:\n", syscall(SYS_gettid));
@@ -356,4 +416,45 @@ void write_log(void *data, int type) { // apre un file e scrive una stringa data
   fclose(log);
   UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
   SIGNAL(&qcond);
+}
+
+char *libro_toString(Libro *libro)
+{
+  char *output = malloc(sizeof(char)*250);
+  if(output == NULL) exit(1);
+
+  strcpy(output, "");
+
+  for (int i = 0; i < libro->numero_autori; i++)
+  {
+    strcat(output, "autore:");
+    strcat(output, libro->autore[i]);
+    strcat(output, ";");
+  }
+  strcat(output, "titolo:");
+  strcat(output, libro->titolo);
+  strcat(output, ";");
+  strcat(output, "collocazione:");
+  strcat(output, libro->collocazione);
+  strcat(output, ";");
+  strcat(output, "descrizione_fisica:");
+  strcat(output, libro->descrizione_fisica);
+  strcat(output, ";");
+  strcat(output, "editore:");
+  strcat(output, libro->editore);
+  strcat(output, ";");
+  strcat(output, "luogo_pubblicazione:");
+  strcat(output, libro->luogo_pubblicazione);
+  strcat(output, ";");
+  strcat(output, "nota:");
+  strcat(output, libro->nota);
+  strcat(output, ";");
+  strcat(output, "prestito:");
+  strcat(output, libro->prestito);
+  strcat(output, ";");
+  strcat(output, "autore:");
+  strcat(output, atoa(libro->anno));
+  strcat(output, ";");
+
+  return output;
 }

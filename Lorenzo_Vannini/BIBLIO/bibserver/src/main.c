@@ -12,6 +12,9 @@
 
 #include "../lib/libro/libro.h"
 #include "../lib/unboundedqueue/unboundedqueue.h"
+#include "../lib/comprot/comprot.h"
+
+#define PORT 8002
 
 struct Request
 {
@@ -96,10 +99,12 @@ void *worker(void *arg)
       write_log(noleggiati, 2);
 
       cursore = noleggiati;
+      char out[250];
       while (cursore)
       {
         // stampa_libro(cursore->libro);
-        send(richiesta->connection_number, cursore->libro, sizeof(Libro), 0);
+        strcpy(out, libro_toString(cursore->libro)); 
+        send(richiesta->connection_number, out, 250, 0);
         cursore = cursore->next;
       }
     }
@@ -108,8 +113,8 @@ void *worker(void *arg)
       write_log(risultato, 1);
       while (risultato)
       {
-        stampa_libro(risultato->libro);
-        send(richiesta->connection_number, risultato->libro, sizeof(Libro), 0);
+        //stampa_libro(risultato->libro);
+        send(richiesta->connection_number, libro_toString(risultato->libro), 250, 0);
         risultato = risultato->next;
       }
     }
@@ -119,9 +124,9 @@ void *worker(void *arg)
     //   free(richiesta->filtro->prestito);
     // free(richiesta);
     // richiesta = NULL;
-    Libro stream_end;
-    stream_end.numero_autori = -1;
-    send(richiesta->connection_number, &stream_end, sizeof(Libro), 0);
+    Packet stream_end;
+    stream_end.type = MSG_NO;
+    send(richiesta->connection_number, &stream_end, sizeof(Packet), 0);
     close(richiesta->connection_number);
     free(richiesta);
   }
@@ -206,7 +211,7 @@ int main(int argc, char *argv[])
 
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = inet_addr("127.0.0.1");
-  address.sin_port = htons(8002);
+  address.sin_port = htons(PORT);
 
   // Forcefully attaching socket to the port 8000
   if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
@@ -233,18 +238,18 @@ int main(int argc, char *argv[])
     connection_request = malloc(sizeof(Request));
     if (connection_request == NULL)
       exit(1);
-    Libro filtro;
-    int noleggio;
+    
+    Packet request;
+    read(new_socket, &request, sizeof(Packet)); // tramite la read inserisco i dati ricevuti da new_socket dentro connection request, della dimensione di Request
 
-    read(new_socket, &filtro, sizeof(Libro)); // tramite la read inserisco i dati ricevuti da new_socket dentro connection request, della dimensione di Request
-    read(new_socket, &noleggio, sizeof(int));
-
-    Libro *request_filter = malloc(sizeof(Libro));
-    if(request_filter == NULL) exit(1);
-    copia_libro(request_filter, &filtro);
-
+    Libro *request_filter = crea_libro_da_stringa(request.data);
     connection_request->filtro = request_filter;
-    connection_request->noleggio = noleggio;
+
+    if(request.type == MSG_LOAN)
+      connection_request->noleggio = 1;
+    else
+      connection_request->noleggio = 0;
+
     connection_request->connection_number = new_socket;
     connection_request->radice_libreria = testa_lista;
     
