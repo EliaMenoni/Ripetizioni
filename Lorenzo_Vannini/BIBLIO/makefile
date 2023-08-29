@@ -10,6 +10,8 @@ server_args := -lpthread -lm
 
 queue_lib := $(server_folder)/$(lib_folder)/unboundedqueue/unboundedqueue.c
 libro_lib := $(server_folder)/$(lib_folder)/libro/libro.c
+comprot_lib := $(server_folder)/$(lib_folder)/comprot/comprot.c
+factory_lib := $(server_folder)/$(lib_folder)/factory/factory.c
 
 server_main_file := $(server_folder)/$(src_folder)/main.c
 client_main_file := $(client_folder)/$(src_folder)/main.c
@@ -17,8 +19,8 @@ client_main_file := $(client_folder)/$(src_folder)/main.c
 server_args := -lm -lpthread
 
 compile server.out client.out:
-	gcc $(server_main_file) -g $(queue_lib) $(libro_lib) -o $(server_folder)/$(bin_folder)/server.out $(server_args)
-	gcc $(client_main_file) -g $(libro_lib) -o $(client_folder)/$(bin_folder)/client.out
+	gcc $(server_main_file) -g $(queue_lib) $(libro_lib) $(comprot_lib) $(factory_lib) -o $(server_folder)/$(bin_folder)/server.out $(server_args)
+	gcc $(client_main_file) -g $(libro_lib) $(comprot_lib) -o $(client_folder)/$(bin_folder)/client.out
 
 .PHONY: server
 server:

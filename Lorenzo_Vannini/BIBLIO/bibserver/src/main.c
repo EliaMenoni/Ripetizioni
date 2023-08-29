@@ -1,5 +1,7 @@
+#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -7,134 +9,16 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
+#include "../lib/comprot/comprot.h"
 #include "../lib/libro/libro.h"
 #include "../lib/unboundedqueue/unboundedqueue.h"
-#include "../lib/comprot/comprot.h"
+#include "../lib/factory/factory.h"
 
-#define PORT 8002
+#define PORT 8003
 
-struct Request
-{
-  Nodo *radice_libreria;
-  int noleggio;
-  Libro *filtro;
-  int connection_number;
-};
-
-typedef struct Request Request;
-
-pthread_mutex_t buffer_mutex;
-
-volatile int terminazione = 0;
-
-void termina_processo(int signum)
-{
-  write_log("Terminazione Server", 0);
-  terminazione = 1;
-}
-
-void *worker(void *arg)
-{
-  pid_t tid = syscall(SYS_gettid); // prende l'id del sottoprocesso corrente
-  char *out_buffer = malloc(250);  // il buffer in cui mettiamo la stringa formattata da stampare nel log
-  if (out_buffer == NULL)
-    exit(1);
-
-  Queue_t *coda = (Queue_t *)arg;
-
-  printf("Worker %d avviato\n", tid);
-  sprintf(out_buffer, "Worker %d avviato", tid);
-  write_log(out_buffer, 0);
-
-  while (!terminazione || length(coda) > 0)
-  {
-    if (length(coda) == 0)
-    {
-      //printf("Worker %d e' in attesa di richieste\n", tid);
-      continue;
-    }
-    
-    Request *richiesta = (Request *)pop(coda);
-    printf("Worker %d serve una richiesta\n", tid);
-    Nodo *libreria = richiesta->radice_libreria;
-
-    Nodo *risultato = ricerca_libri(libreria, richiesta->filtro);
-
-    if (richiesta->noleggio == 1)
-    {
-      sprintf(out_buffer, "%d - servo richiesta noleggio", tid); // fa il lavoro della printf ma anzichè stamparla la mette in un buffer
-      write_log(out_buffer, 0);
-      Nodo *cursore = risultato;
-      Nodo *noleggiati = NULL;
-      Nodo *noleggiati_cursore = NULL;
-      aggiorna_scadenze_prestiti(libreria);
-      while (cursore != NULL)
-      {
-        if (noleggia(cursore->libro))
-        {
-          if (noleggiati == NULL)
-          {
-            noleggiati = malloc(sizeof(Nodo));
-            if (noleggiati == NULL)
-              exit(1);
-            noleggiati_cursore = noleggiati;
-            noleggiati->libro = cursore->libro;
-            noleggiati->next = NULL;
-          }
-          else
-          {
-            noleggiati_cursore->next = malloc(sizeof(Nodo));
-            if (noleggiati_cursore->next == NULL)
-              exit(1);
-            noleggiati_cursore = noleggiati_cursore->next;
-            noleggiati_cursore->libro = cursore->libro;
-            noleggiati_cursore->next = NULL;
-          }
-        }
-        cursore = cursore->next;
-      }
-      write_log(noleggiati, 2);
-
-      cursore = noleggiati;
-      char out[250];
-      while (cursore)
-      {
-        // stampa_libro(cursore->libro);
-        strcpy(out, libro_toString(cursore->libro)); 
-        send(richiesta->connection_number, out, 250, 0);
-        cursore = cursore->next;
-      }
-    }
-    else
-    {
-      write_log(risultato, 1);
-      while (risultato)
-      {
-        //stampa_libro(risultato->libro);
-        send(richiesta->connection_number, libro_toString(risultato->libro), 250, 0);
-        risultato = risultato->next;
-      }
-    }
-    // Invio risposta
-
-    // if (richiesta->filtro->prestito != NULL)
-    //   free(richiesta->filtro->prestito);
-    // free(richiesta);
-    // richiesta = NULL;
-    Packet stream_end;
-    stream_end.type = MSG_NO;
-    send(richiesta->connection_number, &stream_end, sizeof(Packet), 0);
-    close(richiesta->connection_number);
-    free(richiesta);
-  }
-}
-
-int main(int argc, char *argv[])
-{
-  if(argc < 4) {
+int main(int argc, char *argv[]) {
+  if (argc < 4) {
     printf("Format: server bib_name record_file W\n");
     return 1;
   }
@@ -147,19 +31,20 @@ int main(int argc, char *argv[])
   testa_lista = crea_catalogo_da_file(argv[2]);
 
   printf("INIZIALIZZO PTHREAD MUTEX\n");
-  if (pthread_mutex_init(&buffer_mutex, NULL) != 0)
-  {
+  if (pthread_mutex_init(&buffer_mutex, NULL) != 0) {
     perror("pthread_mutex_init() error");
     exit(1);
   }
 
   int num_workers = atoi(argv[3]);
-  if (num_workers <= 0){
+  if (num_workers <= 0) {
     printf("W must be > 0\n");
     return 0;
   }
   printf("CREATO ARRAY GESTIONE THREAD\n");
   pthread_t *workers = malloc(sizeof(pthread_t) * num_workers);
+  
+  memset(workers, 0, sizeof(workers));
   if (workers == NULL)
     exit(1);
 
@@ -179,10 +64,8 @@ int main(int argc, char *argv[])
   printf("AVVIO I WORKER\n");
   write_log("Avvio i Worker", 0);
   // avvia m worker
-  for (int i = 0; i < num_workers; i++)
-  {
-    if (pthread_create(&(workers[i]), NULL, worker, buffer) != 0)
-    {
+  for (int i = 0; i < num_workers; i++) {
+    if (pthread_create(&(workers[i]), NULL, worker, buffer) != 0) {
       perror("pthread_create() error");
       exit(1);
     }
@@ -199,60 +82,18 @@ int main(int argc, char *argv[])
   // INIZIO ASCOLTO SOCKET
   int server_fd, new_socket;
   struct sockaddr_in address;
-  int opt = 1;
-  int addrlen = sizeof(address);
 
-  // Creating socket file descriptor
-  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-  {
-    perror("socket failed");
-    exit(EXIT_FAILURE);
-  }
+  server_fd = create_socket_file();
+  setup_socket_data("127.0.0.1", PORT, &address);
+  socket_bind(server_fd, &address);
+  server_listen(server_fd);
 
-  address.sin_family = AF_INET;
-  address.sin_addr.s_addr = inet_addr("127.0.0.1");
-  address.sin_port = htons(PORT);
+  struct DataPool *connection_request;
+  while (!terminazione) {
+    new_socket = server_accept(server_fd, &address);
 
-  // Forcefully attaching socket to the port 8000
-  if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
-  {
-    perror("bind failed");
-    exit(EXIT_FAILURE);
-  }
+    connection_request = server_read(new_socket, testa_lista);
 
-  if (listen(server_fd, 3) < 0)
-  {
-    perror("listen");
-    exit(EXIT_FAILURE);
-  }
-
-  struct Request *connection_request;
-  while (!terminazione)
-  {
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
-    {
-      perror("accept");
-      exit(EXIT_FAILURE);
-    }
-
-    connection_request = malloc(sizeof(Request));
-    if (connection_request == NULL)
-      exit(1);
-    
-    Packet request;
-    read(new_socket, &request, sizeof(Packet)); // tramite la read inserisco i dati ricevuti da new_socket dentro connection request, della dimensione di Request
-
-    Libro *request_filter = crea_libro_da_stringa(request.data);
-    connection_request->filtro = request_filter;
-
-    if(request.type == MSG_LOAN)
-      connection_request->noleggio = 1;
-    else
-      connection_request->noleggio = 0;
-
-    connection_request->connection_number = new_socket;
-    connection_request->radice_libreria = testa_lista;
-    
     push(buffer, (void *)connection_request);
     // Leggo i dati ricevuto dal client
     // valread = read(new_socket, buffer, 1024);
@@ -267,22 +108,21 @@ int main(int argc, char *argv[])
 
   printf("ASPETTO I WORKER PER LA TERMINAZIONE\n");
   // aspetto i worker
-  for (int i = 0; i < num_workers; i++)
-  {
+  for (int i = 0; i < num_workers; i++) {
     pthread_mutex_lock(&buffer_mutex);
-    if (pthread_join(workers[i], NULL) != 0)
-    {
+    if (pthread_join(workers[i], NULL) != 0) {
       perror("pthread_create() error");
       exit(1);
     }
     pthread_mutex_unlock(&buffer_mutex);
   }
   free(workers);
+  workers = NULL;
   pthread_mutex_destroy(&buffer_mutex);
 
   // Salvare la Libreria
 
   deleteQueue(buffer);
-
+  delete_libreria(testa_lista);
   return 0;
 }

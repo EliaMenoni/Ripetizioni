@@ -11,6 +11,14 @@
                 "7"
             ],
             "cwd": "${fileDirname}",
+        },
+        {
+            "name": "Client Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibclient/bin/client.out",
+            "args": [],
+            "cwd": "${fileDirname}",
         }
     ]
 }
