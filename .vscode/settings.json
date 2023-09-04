@@ -4,6 +4,7 @@
         "stdio.h": "c",
         "unistd.h": "c",
         "in.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "factory.h": "c"
     }
 }

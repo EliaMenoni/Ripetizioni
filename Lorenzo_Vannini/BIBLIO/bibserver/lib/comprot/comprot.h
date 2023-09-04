@@ -10,14 +10,14 @@
 #define MSG_NO 'N'
 #define MSG_ERROR 'E'
 
-struct Packet {
+struct Packet {             // Richiesta e risposta che il client manda al server e viceversa
     char type;              // Tipo richiesta
     unsigned int length;    // Lunghezza richiesta
     char data[2048];         // Dati richiesta
 };
 typedef struct Packet Packet;
 
-int create_socket_file();
+int create_socket_file();   
 
 void setup_socket_data(char *IP, int port, struct sockaddr_in *addr);
 

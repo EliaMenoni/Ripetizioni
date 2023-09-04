@@ -15,20 +15,18 @@
 #include "../lib/unboundedqueue/unboundedqueue.h"
 #include "../lib/factory/factory.h"
 
-#define PORT 8003
+extern char file_name[250];
 
 int main(int argc, char *argv[]) {
-  if (argc < 4) {
-    printf("Format: server bib_name record_file W\n");
+  if (argc < 5) {
+    printf("Format: server port bib_name record_file W\n");
     return 1;
   }
-
-  write_log(argv[1], 0);
 
   Nodo *testa_lista; // puntatore alla radice della lista
 
   printf("CARICAMENTO CATALOGO DA FILE\n");
-  testa_lista = crea_catalogo_da_file(argv[2]);
+  testa_lista = crea_catalogo_da_file(argv[3]);
 
   printf("INIZIALIZZO PTHREAD MUTEX\n");
   if (pthread_mutex_init(&buffer_mutex, NULL) != 0) {
@@ -36,7 +34,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  int num_workers = atoi(argv[3]);
+  int num_workers = atoi(argv[4]);
   if (num_workers <= 0) {
     printf("W must be > 0\n");
     return 0;
@@ -53,8 +51,14 @@ int main(int argc, char *argv[]) {
   Queue_t *buffer = initQueue();
 
   printf("PULIZIA LOG\n");
-  FILE *log = fopen("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/requests.log", "w");
+
+  strcpy(file_name, "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/");
+  strcat(file_name, argv[2]);
+  strcat(file_name, ".log");
+  // printf("%s\n", file_name);
+  FILE *log = fopen(file_name, "w");
   fclose(log);
+  write_log(argv[2], 0);
 
   // push(buffer, (void *)richiesta);
   // push(buffer, (void *)richiesta);
@@ -83,25 +87,19 @@ int main(int argc, char *argv[]) {
   int server_fd, new_socket;
   struct sockaddr_in address;
 
-  server_fd = create_socket_file();
-  setup_socket_data("127.0.0.1", PORT, &address);
-  socket_bind(server_fd, &address);
-  server_listen(server_fd);
+  server_fd = create_socket_file();                  //creo il file del socket
+  setup_socket_data("127.0.0.1", atoi(argv[1]), &address);    //gli do le impostazioni iniziali
+  socket_bind(server_fd, &address);                  //faccio la bind(metto in relazione il file socket con indirizzo e porta su cui lasciarlo in ascolto)
+  server_listen(server_fd);                          //fa rimanere in ascolto il socket
 
   struct DataPool *connection_request;
-  while (!terminazione) {
+  while (!terminazione) {                             //finchè non decido di terminare, accetto le richieste in arrivo
     new_socket = server_accept(server_fd, &address);
 
-    connection_request = server_read(new_socket, testa_lista);
+    connection_request = server_read(new_socket, testa_lista);  //la server_read legge il packet dal socket e crea la datapool
 
-    push(buffer, (void *)connection_request);
-    // Leggo i dati ricevuto dal client
-    // valread = read(new_socket, buffer, 1024);
-    // printf("%s\n", buffer);
-    // Invio la risposta al client
-    // send(new_socket, hello, strlen(hello), 0);
-    // closing the connected socket
-    // close(new_socket);
+    push(buffer, (void *)connection_request);  //faccio la push della datapool sul buffer su cui poi andranno a leggere i thread
+    
   }
   // closing the listening socket
   shutdown(server_fd, SHUT_RDWR);

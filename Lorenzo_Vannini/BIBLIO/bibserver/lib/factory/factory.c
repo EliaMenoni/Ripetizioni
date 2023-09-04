@@ -11,25 +11,31 @@
 #include "factory.h"
 
 volatile int terminazione = 0;
+char file_name[250];
 
-void write_log(void *data, int type) { // apre un file e scrive una stringa data da noi, dobbiamo sfruttare lock e unlock perchè non possiamo accedere a un file con più thread contemporaneamente
-  static pthread_mutex_t qlock;        // per rendere il semaforo disponibile a tutti i thread, anzichè passarlo come argomento, lo abbiamo reso statico
-  static pthread_cond_t qcond;         // viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
+void write_log(void *data, int type)
+{                               // apre un file e scrive una stringa data da noi, dobbiamo sfruttare lock e unlock perchè non possiamo accedere a un file con più thread contemporaneamente
+  static pthread_mutex_t qlock; // per rendere il semaforo disponibile a tutti i thread, anzichè passarlo come argomento, lo abbiamo reso statico
+  static pthread_cond_t qcond;  // viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
   LOCK(&qlock);
   FILE *log;
   log = fopen("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/requests.log", "a+"); // apro il file con "a+" perchè permette di aprire il file in scrittura senza cancellare il contenuto e posizionandosi alla fine.
   if (log == NULL)                                                                                 // mentre con "w" il contenuto veniva cancellato ogni volta, stampando solo l'ultima esecuzione
     exit(1);
 
-  if (type == 0) { // Stringa
+  if (type == 0)
+  { // Stringa
     char *text = (char *)data;
 
     fprintf(log, "%s\n", text); // scrivo nel file di log il testo dato da noi e mando a capo, poi chiudo il file
-  } else if (type == 1) {       // Risultato Operazione Query
+  }
+  else if (type == 1)
+  { // Risultato Operazione Query
     Nodo *libri = (Nodo *)data;
 
-    if (libri == NULL) {
-      fprintf(log, "%ld - Numero di libri inviati: 0\n", syscall(SYS_gettid));
+    if (libri == NULL)
+    {
+      fprintf(log, "QUERY 0\n");
       fclose(log);
       UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
       SIGNAL(&qcond);
@@ -38,26 +44,33 @@ void write_log(void *data, int type) { // apre un file e scrive una stringa data
 
     int n_libri = 0;
     Nodo *iteratore = libri;
-    while (iteratore != NULL) {
+    while (iteratore != NULL)
+    {
       n_libri++;
       iteratore = iteratore->next;
       // da aggiungere i dati
     }
 
-    fprintf(log, "%ld - Numero di libri inviati: %d\n", syscall(SYS_gettid), n_libri);
-
     iteratore = libri;
-    while (iteratore) {
-      fprintf(log, "\t- %s di (1* autore) %s anno %d noleggio %s", iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
+    char *output;
+    while (iteratore)
+    {
+      output = libro_toString(iteratore->libro);
+      fprintf(log, "%s\n\n", output);
+      free(output);
       if (iteratore->next != NULL)
         fprintf(log, "\n");
       iteratore = iteratore->next;
     }
-  } else if (type == 2) { // Risultato Operazione Noleggio
+    fprintf(log, "QUERY %d\n", n_libri);
+  }
+  else if (type == 2)
+  { // Risultato Operazione Noleggio
     Nodo *libri = (Nodo *)data;
 
-    if (libri == NULL) {
-      fprintf(log, "%ld - Numero di libri noleggiati: 0\n", syscall(SYS_gettid));
+    if (libri == NULL)
+    {
+      fprintf(log, "LOAN 0\n");
       fclose(log);
       UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
       SIGNAL(&qcond);
@@ -66,42 +79,45 @@ void write_log(void *data, int type) { // apre un file e scrive una stringa data
 
     int n_libri = 0;
     Nodo *iteratore = libri;
-    while (iteratore != NULL) {
+    while (iteratore != NULL)
+    {
       n_libri++;
       iteratore = iteratore->next;
       // da aggiungere i dati
     }
 
-    fprintf(log, "%ld - Numero di libri noleggiati: %d\n", syscall(SYS_gettid), n_libri);
-
     iteratore = libri;
-    while (iteratore) {
-      fprintf(log, "\t- %s di (1* autore) %s anno %d noleggio %s\n", iteratore->libro->titolo, iteratore->libro->autore[0], iteratore->libro->anno, iteratore->libro->prestito);
+    char *output;
+    while (iteratore)
+    {
+      output = libro_toString(iteratore->libro);
+      fprintf(log, "%s\n\n", output);
+      free(output);
+      if (iteratore->next != NULL)
+        fprintf(log, "\n");
       iteratore = iteratore->next;
     }
-  } else if (type == 3) { // LOG Query
-    Libro *libri = (Libro *)data;
-
-    fprintf(log, "%ld - Applica la query:\n", syscall(SYS_gettid));
-    // DA FARE
+    fprintf(log, "LOAN %d\n", n_libri);
   }
   fclose(log);
   UNLOCK(&qlock); // sblocco il semaforo e segnalo a tutti i thread in attesa che è stato sbloccato
   SIGNAL(&qcond);
 }
 
-void termina_processo(int signum) {
+void termina_processo(int signum)
+{
   write_log("Terminazione Server", 0);
   terminazione = 1;
 }
 
-DataPool *server_read(int socket, Nodo *libreria) {
+DataPool *server_read(int socket, Nodo *libreria)
+{
   Packet incoming;
   read(socket, &incoming, sizeof(Packet));
   Libro *filter = crea_libro_da_stringa(incoming.data);
 
   DataPool *outgoin = malloc(sizeof(DataPool));
-  
+
   memset(outgoin, 0, sizeof(outgoin));
   if (outgoin == NULL)
     exit(1);
@@ -118,10 +134,11 @@ DataPool *server_read(int socket, Nodo *libreria) {
   return outgoin;
 }
 
-void *worker(void *arg) {
+void *worker(void *arg)
+{
   pid_t tid = syscall(SYS_gettid); // prende l'id del sottoprocesso corrente
   char *out_buffer = malloc(250);  // il buffer in cui mettiamo la stringa formattata da stampare nel log
-  
+
   memset(out_buffer, '\0', sizeof(out_buffer));
   if (out_buffer == NULL)
     exit(1);
@@ -132,8 +149,10 @@ void *worker(void *arg) {
   sprintf(out_buffer, "Worker %d avviato", tid);
   write_log(out_buffer, 0);
 
-  while (!terminazione || length(coda) > 0) {
-    if (length(coda) == 0) {
+  while (!terminazione || length(coda) > 0)
+  {
+    if (length(coda) == 0)
+    {
       // printf("Worker %d e' in attesa di richieste\n", tid);
       continue;
     }
@@ -146,27 +165,33 @@ void *worker(void *arg) {
     Nodo *out = NULL;
     Nodo *out_cursore = NULL;
 
-    if (richiesta->noleggio == 1) {
+    if (richiesta->noleggio == 1)
+    {
       sprintf(out_buffer, "%d - servo richiesta noleggio", tid); // fa il lavoro della printf ma anzichè stamparla la mette in un buffer
       write_log(out_buffer, 0);
 
       Nodo *cursore = risultato;
       aggiorna_scadenze_prestiti(libreria);
 
-      while (cursore != NULL) {
-        if (noleggia(cursore->libro)) {
-          if (out == NULL) {
+      while (cursore != NULL)
+      {
+        if (noleggia(cursore->libro))
+        {
+          if (out == NULL)
+          {
             out = malloc(sizeof(Nodo));
-            
+
             memset(out, 0, sizeof(out));
             if (out == NULL)
               exit(1);
             out_cursore = out;
             out->libro = cursore->libro;
             out->next = NULL;
-          } else {
+          }
+          else
+          {
             out_cursore->next = malloc(sizeof(Nodo));
-            
+
             memset(out_cursore->next, 0, sizeof(out_cursore->next));
             if (out_cursore->next == NULL)
               exit(1);
@@ -178,20 +203,24 @@ void *worker(void *arg) {
         cursore = cursore->next;
       }
       write_log(out, 2);
-    } else {
+    }
+    else
+    {
       out = risultato;
       write_log(out, 1);
     }
 
     out_cursore = out;
     Packet risposta;
-    if (out_cursore == NULL) {
+    if (out_cursore == NULL)
+    {
       risposta.type = MSG_NO;
       risposta.length = 0;
 
       send(richiesta->connection_number, &risposta, sizeof(risposta), 0);
     }
-    while (out_cursore) {
+    while (out_cursore)
+    {
       // stampa_libro(cursore->libro);
       char *risposta_str = libro_toString(out_cursore->libro);
       strcpy(risposta.data, risposta_str);
@@ -205,19 +234,24 @@ void *worker(void *arg) {
     }
     out_cursore = risultato;
     Nodo *prev;
-    while (out_cursore) {
+    while (out_cursore)
+    {
       prev = out_cursore;
       out_cursore = out_cursore->next;
       prev->libro = NULL;
       free(prev);
       prev = NULL;
     }
-    out_cursore = out;
-    while (out_cursore) {
-      prev = out_cursore;
-      out_cursore = out_cursore->next;
-      free(prev);
-      prev = NULL;
+    if (richiesta->noleggio)
+    {
+      out_cursore = out;
+      while (out_cursore)
+      {
+        prev = out_cursore;
+        out_cursore = out_cursore->next;
+        free(prev);
+        prev = NULL;
+      }
     }
     out = NULL;
 
