@@ -55,7 +55,7 @@ query2:
 query3:
 	$(client_folder)/$(bin_folder)/client.out -anno 2018
 query4:
-	$(client_folder)/$(bin_folder)/client.out -titolo programmazione nella pratica
+	$(client_folder)/$(bin_folder)/client.out -titolo Progr
 
 loan1:
 	$(client_folder)/$(bin_folder)/client.out -titolo potere -anno 2018 -p
@@ -64,10 +64,10 @@ loan2:
 loan3:
 	$(client_folder)/$(bin_folder)/client.out -anno 2018 -p
 loan4:
-	$(client_folder)/$(bin_folder)/client.out -titolo programmazione nella pratica -p
+	$(client_folder)/$(bin_folder)/client.out -titolo Progr -p
 
 sleep:
-	sleep 1
+	sleep 5
 
 end:
 	sleep 5

@@ -6,8 +6,9 @@
             "request": "launch",
             "program": "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/bin/server.out",
             "args": [
+                "8001",
                 "Biblioteca-Civica",
-                "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/data/biblioteca_1.txt",
+                "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/data/bib1.txt",
                 "7"
             ],
             "cwd": "${fileDirname}",
@@ -17,7 +18,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibclient/bin/client.out",
-            "args": ["-titolo", "potere", "-anno", "2018"],
+            "args": ["-titolo", "Progr"],
             "cwd": "${fileDirname}",
         }
     ]

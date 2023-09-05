@@ -1,0 +1,25 @@
+bib2
+Avvio Server
+Avvio i Worker
+Registrazione segnali di terminazione
+Worker 40532 avviato
+Worker 40531 avviato
+QUERY 0
+QUERY 0
+LOAN 0
+LOAN 0
+QUERY 0
+autore:Kernighan, Brian W.;autore:Pike, Rob;titolo:Programmazione nella Pratica;collocazione:Z.24.56;descrizione_fisica:294 p., softcov,  13 cm;editore:Addison-Wesley Longman Italia Editoriale;luogo_pubblicazione:Milano;nota:Edizione italiana;anno:1999;
+
+
+autore:Stevens, W. Richard;titolo:Unix Network Programming (Second Edition);collocazione:QA76.6 ;descrizione_fisica:1017 p., ill, 23 cm;editore:Prentice Hall PTR;luogo_pubblicazione:Upper Saddle River, 1017 p., ill, 23 cm;nota:Aloha nui loa ;anno:1998;
+
+QUERY 2
+autore:Kernighan, Brian W.;autore:Pike, Rob;titolo:Programmazione nella Pratica;collocazione:Z.24.56;descrizione_fisica:294 p., softcov,  13 cm;editore:Addison-Wesley Longman Italia Editoriale;luogo_pubblicazione:Milano;nota:Edizione italiana;prestito:37-02-22;anno:1999;
+
+
+autore:Stevens, W. Richard;titolo:Unix Network Programming (Second Edition);collocazione:QA76.6 ;descrizione_fisica:1017 p., ill, 23 cm;editore:Prentice Hall PTR;luogo_pubblicazione:Upper Saddle River, 1017 p., ill, 23 cm;nota:Aloha nui loa ;prestito:37-02-22;anno:1998;
+
+LOAN 2
+LOAN 0
+Terminazione Server

@@ -1,0 +1,18 @@
+bib1
+Avvio Server
+Avvio i Worker
+Registrazione segnali di terminazione
+Worker 40529 avviato
+QUERY 0
+QUERY 0
+LOAN 0
+LOAN 0
+QUERY 0
+autore:Kernighan, Brian W.;autore:Pike, Rob;titolo:Programmazione nella Pratica;collocazione:Z.24.56;descrizione_fisica:294 p., softcov,  13 cm;editore:Addison-Wesley Longman Italia Editoriale;luogo_pubblicazione:Milano;nota:Edizione italiana;anno:1999;
+
+QUERY 1
+LOAN 0
+autore:Kernighan, Brian W.;autore:Pike, Rob;titolo:Programmazione nella Pratica;collocazione:Z.24.56;descrizione_fisica:294 p., softcov,  13 cm;editore:Addison-Wesley Longman Italia Editoriale;luogo_pubblicazione:Milano;nota:Edizione italiana;prestito:37-02-22;anno:1999;
+
+LOAN 1
+Terminazione Server

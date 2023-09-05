@@ -19,7 +19,7 @@ void write_log(void *data, int type)
   static pthread_cond_t qcond;  // viene creato all'avvio dell'esecuzione del programma e rimane disponibile dentro la funzione write_log
   LOCK(&qlock);
   FILE *log;
-  log = fopen("/workspaces/Ripetizioni/Lorenzo_Vannini/BIBLIO/bibserver/logs/requests.log", "a+"); // apro il file con "a+" perchè permette di aprire il file in scrittura senza cancellare il contenuto e posizionandosi alla fine.
+  log = fopen(file_name, "a+"); // apro il file con "a+" perchè permette di aprire il file in scrittura senza cancellare il contenuto e posizionandosi alla fine.
   if (log == NULL)                                                                                 // mentre con "w" il contenuto veniva cancellato ogni volta, stampando solo l'ultima esecuzione
     exit(1);
 
@@ -167,8 +167,8 @@ void *worker(void *arg)
 
     if (richiesta->noleggio == 1)
     {
-      sprintf(out_buffer, "%d - servo richiesta noleggio", tid); // fa il lavoro della printf ma anzichè stamparla la mette in un buffer
-      write_log(out_buffer, 0);
+      //sprintf(out_buffer, "%d - servo richiesta noleggio", tid); // fa il lavoro della printf ma anzichè stamparla la mette in un buffer
+      //write_log(out_buffer, 0);
 
       Nodo *cursore = risultato;
       aggiorna_scadenze_prestiti(libreria);
@@ -228,6 +228,11 @@ void *worker(void *arg)
       // printf("%s\n", risposta);
       free(risposta_str);
       risposta_str = NULL;
+
+      if(richiesta->noleggio) 
+      risposta.type = MSG_LOAN;
+      else
+      risposta.type = MSG_QUERY;
 
       send(richiesta->connection_number, &risposta, sizeof(risposta), 0);
       out_cursore = out_cursore->next;

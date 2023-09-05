@@ -1,0 +1,22 @@
+bib5
+Avvio Server
+Avvio i Worker
+Registrazione segnali di terminazione
+Worker 40545 avviato
+Worker 40546 avviato
+Worker 40547 avviato
+Worker 40548 avviato
+Worker 40549 avviato
+QUERY 0
+QUERY 0
+LOAN 0
+LOAN 0
+QUERY 0
+autore:Bentley, Jon;titolo:Programming Pearls (2nd Edition);collocazione:Q446 58;descrizione_fisica:239 + xi pp.;editore:Addison-Wesley;luogo_pubblicazione:Reading MA ;nota:;anno:1999;
+
+QUERY 1
+LOAN 0
+autore:Bentley, Jon;titolo:Programming Pearls (2nd Edition);collocazione:Q446 58;descrizione_fisica:239 + xi pp.;editore:Addison-Wesley;luogo_pubblicazione:Reading MA ;nota:;prestito:38-02-22;anno:1999;
+
+LOAN 1
+Terminazione Server

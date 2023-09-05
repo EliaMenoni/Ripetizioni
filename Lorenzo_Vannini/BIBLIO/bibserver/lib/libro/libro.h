@@ -51,4 +51,6 @@ char *libro_toString(Libro *libro);
 
 void delete_libreria(Nodo *libreria);
 
+char * trim(char *str);
+
 #endif
