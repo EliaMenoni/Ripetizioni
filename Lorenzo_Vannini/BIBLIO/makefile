@@ -36,8 +36,20 @@ server:
 client:
 	$(client_folder)/$(bin_folder)/client.out -titolo potere -anno 2018
 
-test: server1 server2 server3 server4 server5 sleep1 client_test end
-client_test: gruppo1 sleep1 gruppo2 sleep1 gruppo3 sleep1 gruppo4 sleep1 gruppo5 sleep1 gruppo6 sleep1 gruppo7 sleep1 gruppo8
+
+test: server1 server2 server3 server4 server5 client_test
+client_test:
+	sleep 1
+	make gruppo1 -j
+	sleep 1
+	make gruppo2 -j
+	sleep 1
+	make gruppo3 -j
+	sleep 1
+	make gruppo4 -j
+	sleep 1
+	make gruppo5 -j
+	make end
 
 gruppo1: query1 query2 loan1 loan2 query4
 gruppo2: query3 query4 loan3 loan4 loan4
@@ -66,12 +78,11 @@ loan3:
 loan4:
 	$(client_folder)/$(bin_folder)/client.out -titolo Progr -p
 
-sleep1:
-	sleep 1
-
 end:
 	sleep 5
 	killall $(server_folder)/$(bin_folder)/server.out
+	sleep 10
+	make analize
 
 server1:
 	$(server_folder)/$(bin_folder)/server.out 8001 bib1 $(server_folder)/data/bib1.txt 1

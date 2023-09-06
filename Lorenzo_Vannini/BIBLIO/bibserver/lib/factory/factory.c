@@ -56,7 +56,7 @@ void write_log(void *data, int type)
     while (iteratore)
     {
       output = libro_toString(iteratore->libro);
-      fprintf(log, "%s\n\n", output);
+      fprintf(log, "%s\n", output);
       free(output);
       if (iteratore->next != NULL)
         fprintf(log, "\n");
@@ -91,7 +91,7 @@ void write_log(void *data, int type)
     while (iteratore)
     {
       output = libro_toString(iteratore->libro);
-      fprintf(log, "%s\n\n", output);
+      fprintf(log, "%s\n", output);
       free(output);
       if (iteratore->next != NULL)
         fprintf(log, "\n");

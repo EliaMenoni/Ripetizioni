@@ -111,9 +111,8 @@ int main(int argc, char const *argv[]) {
       valread = read(client_fd, &ricevuto, sizeof(Packet));
       if (ricevuto.type != MSG_NO)
         // stampa_libro(&ricevuto);
-        printf("%s\n\n", ricevuto.data);
+        printf("%s\n", ricevuto.data);
     } while (ricevuto.type != MSG_NO);
-    printf("\n");
     // closing the connected socket
     close(client_fd);
   }
