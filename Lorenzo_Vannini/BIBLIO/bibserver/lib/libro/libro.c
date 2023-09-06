@@ -14,8 +14,6 @@
 
 #include "../unboundedqueue/util.h"
 
-#define atoa(x) #x
-
 static inline void LockLibrary(Libro *q) { LOCK(&q->qlock); }
 static inline void UnlockLibrary(Libro *q) { UNLOCK(&q->qlock); }
 static inline void UnlockLibraryAndWait(Libro *q) {
@@ -98,7 +96,7 @@ Libro *crea_libro_da_stringa(char *riga) {
   while (token != NULL) {
     if (*token != '\n') {
       attributo = strtok_r(token, ":", &save2);
-      attributo = trim(attributo);
+      attributo = trim(attributo);     // trim toglie gli spazi in testa e in coda alla stringa
       dato_inserire = strtok_r(NULL, ":", &save2);
       dato_inserire = trim(dato_inserire);
       if (strcmp(attributo, "autore") == 0) {
@@ -287,14 +285,14 @@ void aggiorna_scadenze_prestiti(Nodo *libreria) {
 
     if (strcmp(libreria->libro->prestito, "") != 0) {
       struct tm data;
-      strptime(libreria->libro->prestito, "%S-%M-%H", &data);
+      strptime(libreria->libro->prestito, "%S-%M-%H", &data);  // cambiare qui per rimettere la scadenza in giorni (S->d, M->m, H->y)
 
       // Confronta le date
       // printf("Prestito\t\tOra\n%d\t\t%d\n%d\t\t%d\n%d\t\t%d\n", data.tm_hour,
       // today->tm_hour, data.tm_min, today->tm_min, data.tm_sec,
       // today->tm_sec);
       if (data.tm_hour < today->tm_hour ||
-          (data.tm_hour == today->tm_hour && data.tm_min < today->tm_min) ||
+          (data.tm_hour == today->tm_hour && data.tm_min < today->tm_min) ||  // cambiare qui per scadenza in giorni
           (data.tm_hour == today->tm_hour && data.tm_min == today->tm_min &&
            data.tm_sec < today->tm_sec)) {
         strcpy(libreria->libro->prestito, "");
@@ -320,7 +318,7 @@ int noleggia(Libro *libro) {
     now = time(NULL);
     today = localtime(&now);
 
-    snprintf(
+    snprintf(  // per rimetterlo in giorni, modificare tm_sec con tm_day, togliere + 30 mod 60, i giorni diventano mesi e le ore anni
         libro->prestito, 11, "%02d-%02d-%02d", (today->tm_sec + 30) % 60,
         today->tm_min + (int)((today->tm_sec + 30) / 60) % 60,
         today->tm_hour);  //+1 di base e +1 per scadenza del mese di prestito

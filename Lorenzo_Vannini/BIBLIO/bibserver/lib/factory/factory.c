@@ -229,10 +229,7 @@ void *worker(void *arg)
       free(risposta_str);
       risposta_str = NULL;
 
-      if(richiesta->noleggio) 
-      risposta.type = MSG_LOAN;
-      else
-      risposta.type = MSG_QUERY;
+      risposta.type = MSG_RECORD;
 
       send(richiesta->connection_number, &risposta, sizeof(risposta), 0);
       out_cursore = out_cursore->next;
