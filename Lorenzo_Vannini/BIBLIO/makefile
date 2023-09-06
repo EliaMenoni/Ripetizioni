@@ -87,3 +87,7 @@ server4:
 
 server5:
 	$(server_folder)/$(bin_folder)/server.out 8005 bib5 $(server_folder)/data/bib5.txt 5
+
+analize:
+	./bibaccess.sh --QUERY bib1.log bib2.log bib3.log bib4.log bib5.log
+	./bibaccess.sh --LOAN bib1.log bib2.log bib3.log bib4.log bib5.log
